@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();   
-const { body } = require('express-validator');
-const userController = require('../controllers/user.controller');
-const authMiddleware = require('../middlewares/auth.middleware');
+import { body } from 'express-validator';
+import * as userController from '../controllers/user.controller.js';
+import * as authMiddleware from '../middlewares/auth.middleware.js';
 
 
 router.post('/register', [
@@ -14,7 +14,6 @@ router.post('/register', [
 )
 
 router.post('/login', [
-
     body('email').isEmail().withMessage('Invalid Email'),
     body('password').isLength({min: 6}).withMessage('Password Must be at least 6 characters'),
 ],
@@ -22,7 +21,7 @@ router.post('/login', [
 )
 
 
-router.get('/peofile',authMiddleware.authUser, userController.getUserProfile)
+router.get('/peofile', authMiddleware.authUser, userController.getUserProfile)
 
 
-module.exports = router;
+export default router;

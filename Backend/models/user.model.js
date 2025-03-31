@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const userSchema = new mongoose.Schema({
     fullname: {
@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema({
         unique:true,
         minlength: [5, 'Email Must be at least 5 characters'],
     },
+    mobileNumber: {
+        type: String,
+        minlength: [10, 'Mobile number must be at least 10 digits']
+    },
     password:{
         type: String,
         required: true,  
@@ -28,6 +32,9 @@ const userSchema = new mongoose.Schema({
     socketId:{
         type: String
     },
+    location: {
+        type: String
+    }
 })
 
 
@@ -48,4 +55,4 @@ userSchema.statics.hashPassword = async function(password) {
 }
 
 const userModel = mongoose.model('user', userSchema);
-module.exports = userModel;
+export default userModel;

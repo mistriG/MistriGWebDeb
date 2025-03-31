@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MistriG - Connecting Skilled Workers with Opportunities</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="/">
+                
+                <img class="ic" src="/src/Images/mg.png" alt="MistriG" >
+                MistriG
+            </a>
+        </div>
+        <button class="mobile-menu-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/src/pages/find-work.html">Find Work</a>
+            <a href="/src/pages/hire-workers.html">Hire Workers</a>
+            <a href="/src/pages/join.html" class="btn-primary">Join Now</a>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Connect with Skilled Professionals</h1>
+                <p>Find reliable workers or discover job opportunities in plumbing, carpentry, electrical work, and more. Join MistriG today and be part of a growing community of skilled professionals.</p>
+                <div class="hero-buttons">
+                    <a href="/src/pages/hire-workers.html" class="btn-primary">Hire Workers</a>
+                    <a href="/src/pages/find-work.html" class="btn-secondary">Find Work</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="/src/Images/hero.png" alt="Skilled worker at work" loading="lazy">
+            </div>
+        </section>
+
+        <section class="services">
+            <h2>Our Services</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <img src="/src/Images/plumber.jpeg" alt="Plumber at work">
+                    <h3>Plumbing Services</h3>
+                    <p>Expert plumbers for repairs, installations, and maintenance of all plumbing systems.</p>
+                </div>
+                <div class="service-card">
+                    <img src="/src/Images/electrician.jpeg" alt="Electrician at work">
+                    <h3>Electrical Work</h3>
+                    <p>Licensed electricians for residential and commercial electrical services.</p>
+                </div>
+                <div class="service-card">
+                    <img src="/src/Images/carpentry.jpg" alt="Carpenter at work">
+                    <h3>Carpentry</h3>
+                    <p>Skilled carpenters for furniture, repairs, and custom woodwork.</p>
+                </div>
+                <div class="service-card">
+                    <img src="/src/Images/painter.jpeg" alt="Painter at work">
+                    <h3>Painting Services</h3>
+                    <p>Professional painters for interior and exterior painting projects.</p>
+                </div>
+                <div class="service-card">
+                    <img src="/src/Images/mason.jpeg" alt="Mason at work">
+                    <h3>Masonry</h3>
+                    <p>Expert masons for brickwork, stonework, and concrete construction.</p>
+                </div>
+                <div class="service-card">
+                    <img src="/src/Images/cleaning.jpeg" alt="Cleaner at work">
+                    <h3>Cleaning Services</h3>
+                    <p>Professional cleaners for residential and commercial spaces.</p>
+                </div>
+                <div class="service-card">
+                    <img src="/src/Images/confectioner.jpg" alt="Confectioner at work">
+                    <h3>Confectionery</h3>
+                    <p>Skilled confectioners for custom desserts and baked goods.</p>
+                </div>
+                <div class="service-card">
+                    <img src="/src/Images/labour.jpeg" alt="Construction worker">
+                    <h3>General Labor</h3>
+                    <p>Reliable workers for construction and general labor tasks.</p>
+                </div>
+                <div class="service-card">
+                    <img src="/src/Images/inter.jpeg" alt="Interior designer at work">
+                    <h3>Interior Design</h3>
+                    <p>Creative designers for beautiful and functional spaces.</p>
+                </div>
+            </div>
+        </section>
+        <!-- Carousel -->
+        <div class="carousel-container">
+            <div class="carousel">
+              <div class="carousel-slide">
+                <img src="/src/Images/labour.jpeg" alt="Slide 1">
+              </div>
+              <div class="carousel-slide">
+                <img src="/src/Images/carpentry.jpg" alt="Slide 2">
+              </div>
+              <div class="carousel-slide">
+                <img src="/src/Images/painter.jpeg" alt="Slide 3">
+              </div>
+              <div class="carousel-slide">
+                <img src="/src/Images/confectioner.jpg" alt="Slide 3">
+              </div>
+              <div class="carousel-slide">
+                <img src="/src/Images/electrician.jpeg" alt="Slide 3">
+              </div>
+              <div class="carousel-slide">
+                <img src="/src/Images/inter.jpeg" alt="Slide 3">
+              </div>
+              <div class="carousel-slide">
+                <img src="/src/Images/mason.jpeg" alt="Slide 3">
+              </div>
+              <div class="carousel-slide">
+                <img src="/src/Images/plumber.jpeg" alt="Slide 3">
+              </div>
+            </div>
+            <button class="prev" onclick="moveSlide(-1)">&#10094;</button>
+            <button class="next" onclick="moveSlide(1)">&#10095;</button>
+            <script>
+                let currentSlide = 0;
+let isAnimating = false;
+const carousel = document.querySelector('.carousel');
+const slides = document.querySelectorAll('.carousel-slide');
+const transitionDuration = 500; // Match CSS transition time
+
+function initCarousel() {
+  carousel.style.width = `${slides.length * 600}px`;
+  slides[currentSlide].classList.add('active');
+}
+
+function moveSlide(n) {
+  if (isAnimating) return;
+  
+  isAnimating = true;
+  const prevSlide = currentSlide;
+  
+  // Update current slide index
+  currentSlide = (currentSlide + n + slides.length) % slides.length;
+  
+  // Fade out current slide
+  slides[prevSlide].classList.remove('active');
+  
+  setTimeout(() => {
+    // Update carousel position
+    carousel.style.transform = `translateX(${-currentSlide * 600}px)`;
+    
+    // Fade in new slide
+    slides[currentSlide].classList.add('active');
+    
+    // Reset animation lock
+    isAnimating = false;
+  }, 300);
+}
+
+// Initialize carousel on load
+window.addEventListener('load', initCarousel);
+
+// Event listeners for buttons
+document.querySelector('.prev').addEventListener('click', () => moveSlide(-1));
+document.querySelector('.next').addEventListener('click', () => moveSlide(1));
+                </script>
+          </div>
+     
+
+        <section class="how-it-works">
+            <h2>How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Create Your Profile</h3>
+                    <p>Sign up and create your profile as a worker or client. Add your skills or requirements.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Connect</h3>
+                    <p>Browse through opportunities or post jobs. Find the perfect match for your needs.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Get Started</h3>
+                    <p>Begin working together with secure payments and professional support.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="contact">
+            <h2>Contact Us</h2>
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <div class="info-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                        <p>+91 97114 40258</p>
+                    </div>
+                    <div class="info-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        <p>mistrigpvtltd@gmail.com</p>
+                    </div>
+                    <div class="info-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        <p>Tigri Khanpur, South Delhi, Delhi, India</p>
+                    </div>
+                </div>
+                <form class="contact-form">
+                    <input type="text" name="name" placeholder="Your Name" required>
+                    <input type="email" name="email" placeholder="Your Email" required>
+                    <textarea name="message" placeholder="Your Message" required></textarea>
+                    <button type="submit" class="btn-primary">Send Message</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                MistriG
+            </div>
+            <div class="social-links">
+                <a href="https://www.linkedin.com/company/mistrig" class="social-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 8a6 6 0 0 1 6 6v6h-4v-6a2 2 0 0 0-4 0v6h-4v-12h4v1.5A4 4 0 0 1 16 8z"></path>
+                        <rect x="2" y="9" width="4" height="12"></rect>
+                        <circle cx="4" cy="4" r="2"></circle>
+                    </svg>
+                </a>                
+                <a href="https://www.instagram.com/_mistrig/" class="social-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                </a>
+                <a href="#" class="social-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+                </a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 MistriG. All rights reserved.</p>
+        </div>
+    </footer>
+
+
+    <script type="module">
+        import lottie from './node_modules/lottie-web/build/player/lottie.min.js';
+
+        </script>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Dashboard - MistriG</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: #fff;
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #3498db;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-header h1 {
+            color: #2c3e50;
+            font-size: 2.2rem;
+        }
+
+        .client-profile {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            padding: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: #3498db;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 4rem;
+            font-weight: 300;
+        }
+
+        .profile-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .profile-info h2 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-info p {
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .profile-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .profile-detail {
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-detail strong {
+            color: #2c3e50;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .jobs-section {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header h2 {
+            color: #2c3e50;
+        }
+
+        .job-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .job-card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .job-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .job-card h3 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .job-card p {
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .job-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #95a5a6;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .job-status {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .status-in-progress {
+            background: #f1c40f20;
+            color: #f1c40f;
+            border: 1px solid #f1c40f;
+        }
+
+        .status-completed {
+            background: #2ecc7120;
+            color: #2ecc71;
+            border: 1px solid #2ecc71;
+        }
+
+        .status-pending {
+            background: #e74c3c20;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.6rem 1.2rem;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #3498db;
+            color: #3498db;
+        }
+
+        .btn-outline:hover {
+            background: #f0f7fc;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .mobile-menu-btn span {
+            display: block;
+            width: 25px;
+            height: 2px;
+            background: #2c3e50;
+            transition: all 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: #fff;
+                padding: 1rem;
+                flex-direction: column;
+                text-align: center;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                z-index: 10;
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">MistriG</a>
+        <div class="mobile-menu-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/src/pages/hire-workers.html">Hire Workers</a>
+            <a href="/dashboard.html" class="active">Dashboard</a>
+            <a href="#" id="logoutBtn">Logout</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>Client Dashboard</h1>
+            <div>
+                <a href="/src/pages/hire-workers.html" class="btn">Post New Job</a>
+            </div>
+        </div>
+
+        <div class="client-profile">
+            <div class="profile-avatar" id="profileInitial">C</div>
+            <div class="profile-info">
+                <h2 id="clientName">Client Name</h2>
+                <p>Welcome to your MistriG dashboard. Here you can manage your projects, track progress, and hire skilled workers for your needs.</p>
+                
+                <div class="profile-details">
+                    <div class="profile-detail">
+                        <strong>Email:</strong> <span id="clientEmail">client@example.com</span>
+                    </div>
+                    <div class="profile-detail">
+                        <strong>Phone:</strong> <span id="clientPhone">Not provided</span>
+                    </div>
+                    <div class="profile-detail">
+                        <strong>Location:</strong> <span id="clientLocation">Not specified</span>
+                    </div>
+                    <div class="profile-detail">
+                        <strong>Jobs Posted:</strong> <span id="jobsPosted">0</span>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <a href="#" class="btn" id="editProfileBtn">Edit Profile</a>
+                    <a href="#" class="btn btn-outline">Payment Methods</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="jobs-section">
+            <div class="section-header">
+                <h2>Active Projects</h2>
+            </div>
+            <div class="job-cards">
+                <div class="job-card">
+                    <span class="job-status status-in-progress">In Progress</span>
+                    <h3>Kitchen Renovation Plumbing</h3>
+                    <p>Complete plumbing installation for kitchen renovation, including sink, dishwasher, and refrigerator line.</p>
+                    <div class="job-meta">
+                        <span>Started: Aug 15, 2023</span>
+                        <span>$1,200</span>
+                    </div>
+                    <div class="job-meta">
+                        <span>Worker: John Smith</span>
+                        <span>80% Complete</span>
+                    </div>
+                    <a href="#" class="btn">View Details</a>
+                </div>
+                <div class="job-card">
+                    <span class="job-status status-pending">Pending Worker</span>
+                    <h3>Bathroom Tiling</h3>
+                    <p>Install ceramic tiles in master bathroom, approximately 120 sq ft including floor and shower area.</p>
+                    <div class="job-meta">
+                        <span>Posted: Aug 10, 2023</span>
+                        <span>$800 - $1,200</span>
+                    </div>
+                    <div class="job-meta">
+                        <span>Applicants: 3</span>
+                        <span>Pending Selection</span>
+                    </div>
+                    <a href="#" class="btn">Review Applicants</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="jobs-section">
+            <div class="section-header">
+                <h2>Completed Projects</h2>
+            </div>
+            <div class="job-cards">
+                <div class="job-card">
+                    <span class="job-status status-completed">Completed</span>
+                    <h3>Living Room Painting</h3>
+                    <p>Painted living room walls and ceiling, approximately 500 sq ft with premium paint.</p>
+                    <div class="job-meta">
+                        <span>Completed: July 28, 2023</span>
+                        <span>$650</span>
+                    </div>
+                    <div class="job-meta">
+                        <span>Worker: Mike Johnson</span>
+                        <span>Rating: 5/5</span>
+                    </div>
+                    <a href="#" class="btn btn-outline">Leave Review</a>
+                </div>
+                <div class="job-card">
+                    <span class="job-status status-completed">Completed</span>
+                    <h3>Backyard Landscaping</h3>
+                    <p>Landscaped backyard with new plants, gravel pathways, and irrigation system installation.</p>
+                    <div class="job-meta">
+                        <span>Completed: July 15, 2023</span>
+                        <span>$2,200</span>
+                    </div>
+                    <div class="job-meta">
+                        <span>Worker: Green Thumb Landscaping</span>
+                        <span>Rating: 4.8/5</span>
+                    </div>
+                    <a href="#" class="btn btn-outline">View Details</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="jobs-section">
+            <div class="section-header">
+                <h2>Recommended Services</h2>
+                <a href="#" class="btn btn-outline">View All</a>
+            </div>
+            <div class="job-cards">
+                <div class="job-card">
+                    <h3>Roof Maintenance</h3>
+                    <p>Regular roof inspections can prevent costly damage. Find skilled roofers in your area.</p>
+                    <div class="job-meta">
+                        <span>Recommended for Fall</span>
+                        <span>Avg. Cost: $200 - $500</span>
+                    </div>
+                    <a href="#" class="btn">Find Roofers</a>
+                </div>
+                <div class="job-card">
+                    <h3>HVAC Tune-Up</h3>
+                    <p>Ensure your heating system is ready for winter with a professional inspection.</p>
+                    <div class="job-meta">
+                        <span>Seasonal Recommendation</span>
+                        <span>Avg. Cost: $150 - $300</span>
+                    </div>
+                    <a href="#" class="btn">Find HVAC Technicians</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is logged in, redirect if not
+            const token = localStorage.getItem('token');
+            const userType = localStorage.getItem('userType');
+            if (!token || userType !== 'client') {
+                window.location.href = '/src/pages/login.html';
+                return;
+            }
+            
+            // Populate user information
+            const userFirstName = localStorage.getItem('userFirstName') || '';
+            const userLastName = localStorage.getItem('userLastName') || '';
+            const userEmail = localStorage.getItem('userEmail') || '';
+            const userPhone = localStorage.getItem('userMobileNumber') || 'Not provided';
+            const userLocation = localStorage.getItem('userLocation') || 'Not specified';
+            
+            document.getElementById('clientName').textContent = `${userFirstName} ${userLastName}`;
+            document.getElementById('clientEmail').textContent = userEmail;
+            document.getElementById('clientPhone').textContent = userPhone;
+            document.getElementById('clientLocation').textContent = userLocation;
+            
+            // Set profile initial
+            if (userFirstName) {
+                document.getElementById('profileInitial').textContent = userFirstName.charAt(0).toUpperCase();
+            }
+            
+            // Mobile menu toggle
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const navLinks = document.querySelector('.nav-links');
+            
+            if (mobileMenuBtn && navLinks) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                });
+            }
+            
+            // Logout functionality
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                localStorage.removeItem('userType');
+                localStorage.removeItem('userFirstName');
+                localStorage.removeItem('userLastName');
+                localStorage.removeItem('userEmail');
+                localStorage.removeItem('userMobileNumber');
+                localStorage.removeItem('userLocation');
+                window.location.href = '/';
+            });
+            
+            // Edit Profile Functionality
+            document.getElementById('editProfileBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Create modal for editing profile
+                const modal = document.createElement('div');
+                modal.className = 'edit-profile-modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <span class="close-btn">&times;</span>
+                        <h2>Edit Your Profile</h2>
+                        <form id="editProfileForm">
+                            <div class="form-group">
+                                <label for="editPhone">Phone Number</label>
+                                <input type="tel" id="editPhone" name="mobileNumber" value="${userPhone !== 'Not provided' ? userPhone : ''}" pattern="[0-9]{10}" placeholder="Enter 10-digit mobile number">
+                            </div>
+                            <div class="form-group">
+                                <label for="editLocation">Location</label>
+                                <input type="text" id="editLocation" name="location" value="${userLocation !== 'Not specified' ? userLocation : ''}" placeholder="Enter your city, state">
+                                <button type="button" id="detectLocationBtn" class="btn-outline">Detect My Location</button>
+                            </div>
+                            <button type="submit" class="btn">Save Changes</button>
+                        </form>
+                    </div>
+                `;
+                
+                // Add modal styles
+                const style = document.createElement('style');
+                style.textContent = `
+                    .edit-profile-modal {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0,0,0,0.7);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 1000;
+                    }
+                    .modal-content {
+                        background: white;
+                        padding: 2rem;
+                        border-radius: 10px;
+                        max-width: 500px;
+                        width: 90%;
+                        position: relative;
+                    }
+                    .close-btn {
+                        position: absolute;
+                        top: 1rem;
+                        right: 1rem;
+                        font-size: 1.5rem;
+                        cursor: pointer;
+                    }
+                    #editProfileForm {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1.5rem;
+                        margin-top: 1.5rem;
+                    }
+                    #editProfileForm .form-group {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.5rem;
+                    }
+                    #editProfileForm input {
+                        padding: 0.8rem;
+                        border: 1px solid #ddd;
+                        border-radius: 5px;
+                    }
+                    #detectLocationBtn {
+                        margin-top: 0.5rem;
+                        align-self: flex-start;
+                    }
+                `;
+                
+                document.head.appendChild(style);
+                document.body.appendChild(modal);
+                
+                // Close modal functionality
+                const closeBtn = modal.querySelector('.close-btn');
+                closeBtn.addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
+                
+                // Detect location functionality
+                const detectLocationBtn = document.getElementById('detectLocationBtn');
+                detectLocationBtn.addEventListener('click', () => {
+                    if (navigator.geolocation) {
+                        detectLocationBtn.textContent = 'Detecting...';
+                        navigator.geolocation.getCurrentPosition(
+                            async (position) => {
+                                try {
+                                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+                                    const data = await response.json();
+                                    
+                                    let location = '';
+                                    if (data.address) {
+                                        const city = data.address.city || data.address.town || data.address.village || '';
+                                        const state = data.address.state || '';
+                                        location = [city, state].filter(Boolean).join(', ');
+                                    }
+                                    
+                                    document.getElementById('editLocation').value = location || 'Location detected';
+                                    detectLocationBtn.textContent = 'Location Detected';
+                                } catch (error) {
+                                    console.error('Error detecting location:', error);
+                                    detectLocationBtn.textContent = 'Detection Failed';
+                                }
+                            },
+                            (error) => {
+                                console.error('Error getting location:', error);
+                                detectLocationBtn.textContent = 'Detection Failed';
+                            }
+                        );
+                    } else {
+                        detectLocationBtn.textContent = 'Not Supported';
+                    }
+                });
+                
+                // Save profile changes
+                const editProfileForm = document.getElementById('editProfileForm');
+                editProfileForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(editProfileForm);
+                    const mobileNumber = formData.get('mobileNumber');
+                    const location = formData.get('location');
+                    
+                    if (mobileNumber) {
+                        localStorage.setItem('userMobileNumber', mobileNumber);
+                        document.getElementById('clientPhone').textContent = mobileNumber;
+                    }
+                    
+                    if (location) {
+                        localStorage.setItem('userLocation', location);
+                        document.getElementById('clientLocation').textContent = location;
+                    }
+                    
+                    // TODO: In a real application, we would send this data to the server
+                    document.body.removeChild(modal);
+                    
+                    // Show success message
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'success-message';
+                    successMsg.innerHTML = `
+                        <div class="success-content">
+                            <p>Profile updated successfully!</p>
+                        </div>
+                    `;
+                    successMsg.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #2ecc71;
+                        color: white;
+                        padding: 1rem;
+                        border-radius: 5px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                        z-index: 1000;
+                    `;
+                    
+                    document.body.appendChild(successMsg);
+                    setTimeout(() => {
+                        document.body.removeChild(successMsg);
+                    }, 3000);
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
