@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Worker Registration - MistriG</title>
+    <link rel="stylesheet" href="../style.css">
     <style>
         * {
             margin: 0;
@@ -15,38 +16,7 @@
         body {
             background: #f5f5f5;
             min-height: 100vh;
-        }
-
-        .navbar {
-            background: #fff;
-            padding: 1rem 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #2c3e50;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: #2c3e50;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: #3498db;
+            margin-top: 80px; /* Add margin to account for fixed navbar */
         }
 
         .register-container {
@@ -110,6 +80,11 @@
             transition: border-color 0.3s;
         }
 
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
@@ -127,6 +102,32 @@
         .form-group select.error,
         .form-group textarea.error {
             border-color: #e74c3c;
+        }
+
+        .skill-selection {
+            margin-bottom: 1.5rem;
+        }
+
+        .skill-selection h3 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .skill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .skill-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .skill-item input {
+            width: 16px;
+            height: 16px;
         }
 
         .register-btn {
@@ -188,44 +189,60 @@
             border-radius: 0 5px 5px 0;
         }
 
-        .mobile-menu-btn {
-            display: none;
-            flex-direction: column;
-            gap: 6px;
-            cursor: pointer;
-            padding: 5px;
+        /* Checkbox group styling */
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            margin-top: 3px;
+        }
+        
+        .checkbox-group label {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .checkbox-group a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .checkbox-group a:hover {
+            text-decoration: underline;
+        }
+        
+        /* File upload styling */
+        input[type="file"] {
+            padding: 10px;
+            border: 1px dashed #ddd;
+            border-radius: 5px;
+            width: 100%;
+            background-color: #f9f9f9;
+        }
+        
+        input[type="file"]:hover {
+            border-color: #3498db;
+            background-color: #f0f7fc;
         }
 
-        .mobile-menu-btn span {
-            display: block;
-            width: 25px;
-            height: 2px;
-            background: #2c3e50;
-            transition: all 0.3s;
+        .field-description {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .ic {
+            width: 30px;
+            height: 30px;
+            margin-right: 8px;
+            vertical-align: middle;
         }
 
         @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: #fff;
-                padding: 1rem;
-                flex-direction: column;
-                text-align: center;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            }
-
-            .nav-links.active {
-                display: flex;
-            }
-
-            .mobile-menu-btn {
-                display: flex;
-            }
-            
             .form-row {
                 flex-direction: column;
                 gap: 1.5rem;
@@ -235,17 +252,21 @@
 </head>
 <body>
     <nav class="navbar">
-        <a href="/" class="logo">MistriG</a>
-        <div class="mobile-menu-btn">
-            <span></span>
-            <span></span>
-            <span></span>
+        <div class="nav-brand">
+            <a href="/">
+                <img class="ic" src="/src/Images/mg.png" alt="MistriG">
+                MistriG
+            </a>
         </div>
+        <button class="mobile-menu-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
         <div class="nav-links">
             <a href="/">Home</a>
             <a href="/src/pages/find-work.html">Find Work</a>
-            <a href="/src/pages/hire-workers.html">Hire Workers</a>
-            <a href="/src/pages/login.html">Login</a>
+            <a href="/src/pages/login.html" class="btn-primary">Join Now</a>
         </div>
     </nav>
 
@@ -261,53 +282,64 @@
         </div>
         
         <form id="workerRegisterForm" class="register-form">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="firstname">First Name</label>
-                    <input type="text" id="firstname" name="firstname" required>
-                    <div class="error">Please enter your first name</div>
-                </div>
-                <div class="form-group">
-                    <label for="lastname">Last Name</label>
-                    <input type="text" id="lastname" name="lastname" required>
-                    <div class="error">Please enter your last name</div>
-                </div>
+            <div class="form-group">
+                <label for="fullname">Full Name</label>
+                <input type="text" id="fullname" name="fullname" placeholder="Enter your full name" required>
+                <div class="error">Please enter your full name</div>
             </div>
             
             <div class="form-group">
                 <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
                 <div class="error">Please enter a valid email address</div>
             </div>
             
             <div class="form-row">
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+                    <input type="password" id="password" name="password" placeholder="Create a strong password" required>
                     <div class="error">Password must be at least 6 characters long</div>
                 </div>
                 <div class="form-group">
                     <label for="confirmPassword">Confirm Password</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
                     <div class="error">Passwords do not match</div>
                 </div>
             </div>
             
             <div class="form-group">
                 <label for="phoneNumber">Phone Number</label>
-                <input type="tel" id="phoneNumber" name="phoneNumber" pattern="[0-9]{10}" placeholder="Enter 10-digit mobile number" required>
-                <div class="error">Please enter a valid 10-digit phone number</div>
+                <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="Enter your phone number" required>
+                <div class="error">Please enter a valid phone number</div>
             </div>
             
             <div class="form-group">
-                <label for="profession">Profession</label>
+                <label for="location">Location</label>
+                <select id="location" name="location" required>
+                    <option value="">Select your location</option>
+                    <option value="delhi">Delhi</option>
+                    <option value="mumbai">Mumbai</option>
+                    <option value="bangalore">Bangalore</option>
+                    <option value="hyderabad">Hyderabad</option>
+                    <option value="chennai">Chennai</option>
+                    <option value="kolkata">Kolkata</option>
+                    <option value="pune">Pune</option>
+                    <option value="ahmedabad">Ahmedabad</option>
+                    <option value="jaipur">Jaipur</option>
+                    <option value="other">Other</option>
+                </select>
+                <div class="error">Please select your location</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="profession">Skill/Profession</label>
                 <select id="profession" name="profession" required>
                     <option value="">Select your profession</option>
-                    <option value="electrician">Electrician</option>
+                    <option value="painter">Painter</option>
                     <option value="plumber">Plumber</option>
                     <option value="carpenter">Carpenter</option>
-                    <option value="painter">Painter</option>
                     <option value="mason">Mason</option>
+                    <option value="electrician">Electrician</option>
                     <option value="gardener">Gardener</option>
                     <option value="cleaner">Cleaner</option>
                     <option value="mechanic">Mechanic</option>
@@ -317,21 +349,84 @@
             </div>
             
             <div class="form-group">
-                <label for="experience">Years of Experience</label>
-                <input type="number" id="experience" name="experience" min="0" required>
-                <div class="error">Please enter your years of experience</div>
+                <label for="experience">Experience Level</label>
+                <select id="experience" name="experience" required>
+                    <option value="">Select your experience level</option>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="expert">Expert</option>
+                </select>
+                <div class="error">Please select your experience level</div>
             </div>
             
             <div class="form-group">
-                <label for="location">Location</label>
-                <input type="text" id="location" name="location" placeholder="City, State" required>
-                <div class="error">Please enter your location</div>
+                <label for="profilePicture">Profile Picture</label>
+                <input type="file" id="profilePicture" name="profilePicture" accept="image/*">
+                <div class="error">Please upload a valid image file</div>
             </div>
             
             <div class="form-group">
-                <label for="bio">About Yourself</label>
-                <textarea id="bio" name="bio" rows="4" placeholder="Describe your skills and experience"></textarea>
-                <div class="error">Please enter some information about yourself</div>
+                <label for="availability">Availability</label>
+                <select id="availability" name="availability" required>
+                    <option value="">Select your availability</option>
+                    <option value="full-time">Full-time</option>
+                    <option value="part-time">Part-time</option>
+                    <option value="weekends">Weekends only</option>
+                    <option value="evenings">Evenings only</option>
+                    <option value="flexible">Flexible hours</option>
+                </select>
+                <div class="error">Please select your availability</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="hourlyRate">Hourly Rate (₹)</label>
+                <input type="number" id="hourlyRate" name="hourlyRate" min="100" placeholder="Enter your hourly rate" required>
+                <div class="error">Please enter a valid hourly rate (minimum ₹100)</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="regularPrice">Regular Price (Standard Rate) (₹)</label>
+                <input type="number" id="regularPrice" name="regularPrice" min="500" max="20000" placeholder="Enter your regular price (per hour/service)" required>
+                <div class="error">Please enter a valid regular price (between ₹500 and ₹20,000)</div>
+                <p class="field-description">This is your standard service rate that will be displayed to potential customers.</p>
+            </div>
+            
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" id="streetAddress" name="streetAddress" placeholder="Street Address" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <input type="text" id="city" name="city" placeholder="City" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="state" name="state" placeholder="State/Province" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <input type="text" id="postalCode" name="postalCode" placeholder="Postal/Zip Code" required>
+                    </div>
+                    <div class="form-group">
+                        <select id="country" name="country" required>
+                            <option value="">Select Country</option>
+                            <option value="india">India</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="error">Please fill in all address fields</div>
+            </div>
+            
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="policeVerification" name="policeVerification" required>
+                <label for="policeVerification">I consent to a police/security record verification for registration. <a href="/privacy-policy.html" target="_blank">View Privacy Policy</a></label>
+                <div class="error">You must consent to verification to proceed</div>
+            </div>
+            
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="termsConditions" name="termsConditions" required>
+                <label for="termsConditions">I agree to the <a href="/terms-conditions.html" target="_blank">terms and conditions</a></label>
+                <div class="error">You must agree to the terms and conditions</div>
             </div>
             
             <button type="submit" class="register-btn">Create Worker Account</button>
@@ -343,5 +438,171 @@
     </div>
 
     <script type="module" src="/src/main.js"></script>
+    <script>
+        // Form validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const workerRegisterForm = document.getElementById('workerRegisterForm');
+            const passwordField = document.getElementById('password');
+            const confirmPasswordField = document.getElementById('confirmPassword');
+            const hourlyRateField = document.getElementById('hourlyRate');
+            const phoneNumberField = document.getElementById('phoneNumber');
+            const fileUploadField = document.getElementById('profilePicture');
+            
+            if (workerRegisterForm) {
+                workerRegisterForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Reset error states
+                    const errorElements = document.querySelectorAll('.error');
+                    errorElements.forEach(error => {
+                        error.style.display = 'none';
+                    });
+                    
+                    let hasError = false;
+                    
+                    // Validate full name
+                    const fullNameField = document.getElementById('fullname');
+                    if (!fullNameField.value.trim()) {
+                        fullNameField.nextElementSibling.style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    // Validate email
+                    const emailField = document.getElementById('email');
+                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailPattern.test(emailField.value)) {
+                        emailField.nextElementSibling.style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    // Validate password
+                    if (passwordField.value.length < 6) {
+                        passwordField.nextElementSibling.style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    // Validate confirm password
+                    if (passwordField.value !== confirmPasswordField.value) {
+                        confirmPasswordField.nextElementSibling.style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    // Validate phone number
+                    if (!phoneNumberField.value.trim()) {
+                        phoneNumberField.nextElementSibling.style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    // Validate location
+                    const locationField = document.getElementById('location');
+                    if (!locationField.value) {
+                        locationField.nextElementSibling.style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    // Validate profession
+                    const professionField = document.getElementById('profession');
+                    if (!professionField.value) {
+                        professionField.nextElementSibling.style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    // Validate experience
+                    const experienceField = document.getElementById('experience');
+                    if (!experienceField.value) {
+                        experienceField.nextElementSibling.style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    // Validate availability
+                    const availabilityField = document.getElementById('availability');
+                    if (!availabilityField.value) {
+                        availabilityField.nextElementSibling.style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    // Validate hourly rate
+                    if (!hourlyRateField.value || hourlyRateField.value < 100) {
+                        hourlyRateField.nextElementSibling.style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    // Validate regular price
+                    const regularPriceField = document.getElementById('regularPrice');
+                    if (!regularPriceField.value || regularPriceField.value < 500 || regularPriceField.value > 20000) {
+                        regularPriceField.nextElementSibling.style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    // Validate address fields
+                    const streetAddressField = document.getElementById('streetAddress');
+                    const cityField = document.getElementById('city');
+                    const stateField = document.getElementById('state');
+                    const postalCodeField = document.getElementById('postalCode');
+                    const countryField = document.getElementById('country');
+                    
+                    if (!streetAddressField.value.trim() || !cityField.value.trim() ||
+                        !stateField.value.trim() || !postalCodeField.value.trim() || !countryField.value) {
+                        // Show address error message
+                        const addressErrorMessage = streetAddressField.parentElement.querySelector('.error');
+                        addressErrorMessage.style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    // Validate file upload if a file is selected
+                    if (fileUploadField.files.length > 0) {
+                        const file = fileUploadField.files[0];
+                        if (!file.type.match('image.*')) {
+                            fileUploadField.nextElementSibling.style.display = 'block';
+                            hasError = true;
+                        }
+                    }
+                    
+                    // Validate checkboxes
+                    const policeVerificationCheckbox = document.getElementById('policeVerification');
+                    const termsCheckbox = document.getElementById('termsConditions');
+                    
+                    if (!policeVerificationCheckbox.checked) {
+                        policeVerificationCheckbox.parentElement.querySelector('.error').style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    if (!termsCheckbox.checked) {
+                        termsCheckbox.parentElement.querySelector('.error').style.display = 'block';
+                        hasError = true;
+                    }
+                    
+                    // If no errors, submit the form
+                    if (!hasError) {
+                        // In a real application, you would submit the form to the server here
+                        // For now, just simulate a submission
+                        alert('Registration submitted successfully! We will review your application and contact you shortly.');
+                        workerRegisterForm.reset();
+                        
+                        // Simulate redirect after registration
+                        setTimeout(() => {
+                            window.location.href = '/src/pages/worker-login.html';
+                        }, 2000);
+                    } else {
+                        // Scroll to the first error
+                        const firstError = document.querySelector('.error[style="display: block;"]');
+                        if (firstError) {
+                            firstError.closest('.form-group').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                });
+            }
+            
+            // Mobile menu toggle
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const navLinks = document.querySelector('.nav-links');
+            
+            if (mobileMenuBtn && navLinks) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    navLinks.classList.toggle('active');
+                });
+            }
+        });
+    </script>
 </body>
 </html> 

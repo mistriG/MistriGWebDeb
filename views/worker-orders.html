@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Orders - MistriG</title>
+    <!-- Include Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="src/style.css">
+    <link rel="stylesheet" href="src/worker-dashboard.css">
+    <style>
+        /* Orders specific styles */
+        .orders-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        .order-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .order-card:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .order-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .status-pending {
+            background-color: #FFF3E0;
+            color: #E65100;
+        }
+        
+        .status-accepted {
+            background-color: #E8F5E9;
+            color: #2E7D32;
+        }
+        
+        .status-completed {
+            background-color: #E3F2FD;
+            color: #1565C0;
+        }
+        
+        .status-cancelled {
+            background-color: #FFEBEE;
+            color: #C62828;
+        }
+        
+        .order-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        
+        .action-btn {
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .btn-primary {
+            background: #1a237e;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #FF9800;
+            color: white;
+        }
+        
+        .order-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .order-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .order-tab.active {
+            color: #1a237e;
+            font-weight: bold;
+        }
+        
+        .order-tab.active:after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #1a237e;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #757575;
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 20px;
+            color: #BDBDBD;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo-container">
+                <img src="/src/Images/mg.png" alt="MistriG">
+                <h2>MistriG</h2>
+            </div>
+            <ul class="nav-menu">
+                <li>
+                    <a href="worker-dashboard.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="active">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        Orders
+                    </a>
+                </li>
+                <li>
+                    <a href="worker-earnings.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        Earnings
+                    </a>
+                </li>
+                <li>
+                    <a href="worker-profile.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Profile
+                    </a>
+                </li>
+                <li>
+                    <a href="worker-settings.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="index.html" id="logoutBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Orders Content -->
+        <div class="main-content">
+            <!-- Top Header with Status Toggle and User Info -->
+            <div class="top-header">
+                <div class="worker-status">
+                    <label class="status-toggle">
+                        <input type="checkbox" id="statusToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="status-text offline" id="offlineStatus">Offline</span>
+                    <span class="status-text online" id="onlineStatus">Online</span>
+                    <span class="loader" id="statusLoader"></span>
+                </div>
+                <div class="user-controls">
+                    <div class="notification-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="user-profile" id="userProfileBtn">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Profile">
+                        <span>Rahul Sharma</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Tabs -->
+            <div class="order-tabs">
+                <div class="order-tab active" data-tab="new">New Orders</div>
+                <div class="order-tab" data-tab="accepted">Accepted</div>
+                <div class="order-tab" data-tab="completed">Completed</div>
+                <div class="order-tab" data-tab="cancelled">Cancelled</div>
+            </div>
+            
+            <!-- New Orders Container -->
+            <div class="orders-container" id="new-orders">
+                <div class="order-card">
+                    <span class="order-status status-pending">New</span>
+                    <h3>Plumbing Repair - Sink Installation</h3>
+                    <p><strong>Customer:</strong> Amit Patel</p>
+                    <p><strong>Location:</strong> Dwarka Sector 12, New Delhi</p>
+                    <p><strong>Date:</strong> 15 Apr, 2025 - 10:30 AM</p>
+                    <p><strong>Price:</strong> ₹1,200</p>
+                    <p><strong>Description:</strong> Need to install a new kitchen sink and connect to existing plumbing.</p>
+                    <div class="order-actions">
+                        <button class="action-btn btn-success btn-accept" data-order-id="order123">Accept</button>
+                        <button class="action-btn btn-warning btn-reject" data-order-id="order123">Reject</button>
+                    </div>
+                </div>
+                <div class="order-card">
+                    <span class="order-status status-pending">New</span>
+                    <h3>Pipe Fitting - Water Leakage</h3>
+                    <p><strong>Customer:</strong> Priya Sharma</p>
+                    <p><strong>Location:</strong> Vasant Kunj, New Delhi</p>
+                    <p><strong>Date:</strong> 16 Apr, 2025 - 3:00 PM</p>
+                    <p><strong>Price:</strong> ₹1,500</p>
+                    <p><strong>Description:</strong> Water leakage from bathroom pipe. Need urgent repair.</p>
+                    <div class="order-actions">
+                        <button class="action-btn btn-success btn-accept" data-order-id="order124">Accept</button>
+                        <button class="action-btn btn-warning btn-reject" data-order-id="order124">Reject</button>
+                    </div>
+                </div>
+                <div class="order-card">
+                    <span class="order-status status-pending">New</span>
+                    <h3>Toilet Repair</h3>
+                    <p><strong>Customer:</strong> Vikas Kumar</p>
+                    <p><strong>Location:</strong> Mayur Vihar Phase 1, Delhi</p>
+                    <p><strong>Date:</strong> 17 Apr, 2025 - 11:00 AM</p>
+                    <p><strong>Price:</strong> ₹1,800</p>
+                    <p><strong>Description:</strong> Toilet flush not working properly, needs repair or replacement.</p>
+                    <div class="order-actions">
+                        <button class="action-btn btn-success btn-accept" data-order-id="order125">Accept</button>
+                        <button class="action-btn btn-warning btn-reject" data-order-id="order125">Reject</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Accepted Orders Container -->
+            <div class="orders-container" id="accepted-orders" style="display: none;">
+                <div class="order-card">
+                    <span class="order-status status-accepted">Accepted</span>
+                    <h3>Water Heater Installation</h3>
+                    <p><strong>Customer:</strong> Rajesh Khanna</p>
+                    <p><strong>Location:</strong> Greater Kailash, New Delhi</p>
+                    <p><strong>Date:</strong> 14 Apr, 2025 - 2:00 PM</p>
+                    <p><strong>Price:</strong> ₹2,500</p>
+                    <p><strong>Description:</strong> Installation of new Havells water heater in bathroom.</p>
+                    <div class="order-actions">
+                        <button class="action-btn btn-primary" data-order-id="order120">View Details</button>
+                        <button class="action-btn btn-success btn-complete" data-order-id="order120">Mark Complete</button>
+                    </div>
+                </div>
+                <div class="order-card">
+                    <span class="order-status status-accepted">Accepted</span>
+                    <h3>Pipe Maintenance</h3>
+                    <p><strong>Customer:</strong> Sanjay Gupta</p>
+                    <p><strong>Location:</strong> Noida Sector 62</p>
+                    <p><strong>Date:</strong> 15 Apr, 2025 - 9:00 AM</p>
+                    <p><strong>Price:</strong> ₹1,350</p>
+                    <p><strong>Description:</strong> Regular maintenance of home plumbing system.</p>
+                    <div class="order-actions">
+                        <button class="action-btn btn-primary" data-order-id="order121">View Details</button>
+                        <button class="action-btn btn-success btn-complete" data-order-id="order121">Mark Complete</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Completed Orders Container -->
+            <div class="orders-container" id="completed-orders" style="display: none;">
+                <div class="order-card">
+                    <span class="order-status status-completed">Completed</span>
+                    <h3>Bathroom Sink Repair</h3>
+                    <p><strong>Customer:</strong> Anil Kumar</p>
+                    <p><strong>Location:</strong> Connaught Place, New Delhi</p>
+                    <p><strong>Date:</strong> 10 Apr, 2025 - 1:00 PM</p>
+                    <p><strong>Price:</strong> ₹900</p>
+                    <p><strong>Rating:</strong> ★★★★★ (5/5)</p>
+                    <p><strong>Customer Feedback:</strong> "Excellent service, very professional and timely."</p>
+                    <div class="order-actions">
+                        <button class="action-btn btn-primary" data-order-id="order115">View Details</button>
+                    </div>
+                </div>
+                <div class="order-card">
+                    <span class="order-status status-completed">Completed</span>
+                    <h3>Water Connection Setup</h3>
+                    <p><strong>Customer:</strong> Smitha Patil</p>
+                    <p><strong>Location:</strong> Rohini, Delhi</p>
+                    <p><strong>Date:</strong> 8 Apr, 2025 - 11:30 AM</p>
+                    <p><strong>Price:</strong> ₹2,000</p>
+                    <p><strong>Rating:</strong> ★★★★☆ (4/5)</p>
+                    <p><strong>Customer Feedback:</strong> "Good work, would recommend."</p>
+                    <div class="order-actions">
+                        <button class="action-btn btn-primary" data-order-id="order116">View Details</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cancelled Orders Container -->
+            <div class="orders-container" id="cancelled-orders" style="display: none;">
+                <div class="order-card">
+                    <span class="order-status status-cancelled">Cancelled</span>
+                    <h3>Kitchen Pipe Repair</h3>
+                    <p><strong>Customer:</strong> Neha Singh</p>
+                    <p><strong>Location:</strong> Gurgaon Sector 14</p>
+                    <p><strong>Date:</strong> 7 Apr, 2025 - 4:00 PM</p>
+                    <p><strong>Price:</strong> ₹1,100</p>
+                    <p><strong>Cancellation Reason:</strong> Customer found another service provider.</p>
+                    <div class="order-actions">
+                        <button class="action-btn btn-primary" data-order-id="order110">View Details</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/main.js"></script>
+    <script src="src/api-service.js"></script>
+    <script>
+        // Immediately set toggle state based on localStorage (before any events fire)
+        (function() {
+            const statusToggle = document.getElementById('statusToggle');
+            const offlineStatus = document.getElementById('offlineStatus');
+            const onlineStatus = document.getElementById('onlineStatus');
+            
+            if (statusToggle) {
+                const savedStatus = localStorage.getItem('workerStatus');
+                // Explicitly check for the string 'online' to set the toggle
+                if (savedStatus === 'online') {
+                    statusToggle.checked = true;
+                    offlineStatus.style.display = 'none';
+                    onlineStatus.style.display = 'inline-block';
+                } else {
+                    // Make sure to set offline state explicitly
+                    statusToggle.checked = false;
+                    onlineStatus.style.display = 'none';
+                    offlineStatus.style.display = 'inline-block';
+                    // Ensure we have a workerStatus value stored
+                    if (!savedStatus) {
+                        localStorage.setItem('workerStatus', 'offline');
+                    }
+                }
+            }
+        })();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching functionality
+            const tabs = document.querySelectorAll('.order-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Hide all order containers
+                    document.querySelectorAll('.orders-container').forEach(container => {
+                        container.style.display = 'none';
+                    });
+                    
+                    // Show the selected order container
+                    const tabName = this.dataset.tab;
+                    document.getElementById(`${tabName}-orders`).style.display = 'block';
+                });
+            });
+            
+            // Accept order functionality
+            document.querySelectorAll('.btn-accept').forEach(button => {
+                button.addEventListener('click', function() {
+                    const orderId = this.dataset.orderId;
+                    const orderCard = this.closest('.order-card');
+                    
+                    if (confirm('Are you sure you want to accept this order?')) {
+                        // Simulate API call
+                        button.textContent = 'Accepting...';
+                        button.disabled = true;
+                        
+                        setTimeout(() => {
+                            // Move order to accepted tab
+                            orderCard.querySelector('.order-status').className = 'order-status status-accepted';
+                            orderCard.querySelector('.order-status').textContent = 'Accepted';
+                            
+                            // Replace action buttons
+                            const actionDiv = orderCard.querySelector('.order-actions');
+                            actionDiv.innerHTML = `
+                                <button class="action-btn btn-primary" data-order-id="${orderId}">View Details</button>
+                                <button class="action-btn btn-success btn-complete" data-order-id="${orderId}">Mark Complete</button>
+                            `;
+                            
+                            // Move to accepted tab
+                            document.getElementById('accepted-orders').appendChild(orderCard);
+                            
+                            // Switch to accepted tab
+                            document.querySelector('.order-tab[data-tab="accepted"]').click();
+                            
+                            alert('Order accepted successfully!');
+                        }, 1000);
+                    }
+                });
+            });
+            
+            // Reject order functionality
+            document.querySelectorAll('.btn-reject').forEach(button => {
+                button.addEventListener('click', function() {
+                    const orderId = this.dataset.orderId;
+                    const orderCard = this.closest('.order-card');
+                    
+                    if (confirm('Are you sure you want to reject this order?')) {
+                        // Simulate API call
+                        button.textContent = 'Rejecting...';
+                        button.disabled = true;
+                        
+                        setTimeout(() => {
+                            // Simply remove the card for demo purposes
+                            orderCard.remove();
+                            alert('Order rejected successfully!');
+                        }, 1000);
+                    }
+                });
+            });
+            
+            // Status toggle functionality (reusing from dashboard)
+            const statusToggle = document.getElementById('statusToggle');
+            const offlineStatus = document.getElementById('offlineStatus');
+            const onlineStatus = document.getElementById('onlineStatus');
+            const statusLoader = document.getElementById('statusLoader');
+            
+            if (statusToggle) {
+                statusToggle.addEventListener('change', function() {
+                    statusLoader.style.display = 'inline-block';
+                    
+                    const isOnline = this.checked;
+                    
+                    // Simulate API call
+                    setTimeout(() => {
+                        if (isOnline) {
+                            offlineStatus.style.display = 'none';
+                            onlineStatus.style.display = 'inline-block';
+                        } else {
+                            onlineStatus.style.display = 'none';
+                            offlineStatus.style.display = 'inline-block';
+                        }
+                        
+                        localStorage.setItem('workerStatus', isOnline ? 'online' : 'offline');
+                        statusLoader.style.display = 'none';
+                    }, 1000);
+                });
+            }
+            
+            // Logout functionality
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    if (confirm('Are you sure you want to logout?')) {
+                        // Clear local storage
+                        localStorage.removeItem('workerToken');
+                        localStorage.removeItem('userType');
+                        localStorage.removeItem('userFirstName');
+                        localStorage.removeItem('workerStatus');
+                        localStorage.removeItem('locationWatchId');
+                        
+                        // Redirect to homepage
+                        window.location.href = '/';
+                    }
+                });
+            }
+            
+            // User profile dropdown
+            const userProfileBtn = document.getElementById('userProfileBtn');
+            if (userProfileBtn) {
+                userProfileBtn.addEventListener('click', function() {
+                    // Create dropdown menu (simplified version of dashboard function)
+                    alert('User profile clicked - dropdown functionality would open here');
+                });
+            }
+            
+            // Add notification icon click handler
+            const notificationIcon = document.querySelector('.notification-icon');
+            if (notificationIcon) {
+                notificationIcon.addEventListener('click', function() {
+                    // Create and show notifications dropdown
+                    const dropdown = document.createElement('div');
+                    dropdown.className = 'notifications-dropdown';
+                    dropdown.innerHTML = `
+                        <h4>Notifications</h4>
+                        <div class="notification-item unread">
+                            <p><strong>New Order Available</strong></p>
+                            <p>Sink Installation request in your area</p>
+                            <p class="notification-time">5 minutes ago</p>
+                        </div>
+                        <div class="notification-item unread">
+                            <p><strong>Customer Reminder</strong></p>
+                            <p>Your scheduled service at Amit's place is tomorrow</p>
+                            <p class="notification-time">2 hours ago</p>
+                        </div>
+                        <div class="notification-item">
+                            <p><strong>Payment Received</strong></p>
+                            <p>You received ₹1,500 for Pipe Fitting service</p>
+                            <p class="notification-time">Yesterday</p>
+                        </div>
+                        <a href="#" class="view-all">View All Notifications</a>
+                    `;
+                    
+                    // Add styles for the dropdown
+                    const style = document.createElement('style');
+                    style.innerHTML = `
+                        .notifications-dropdown {
+                            position: absolute;
+                            top: 60px;
+                            right: 80px;
+                            width: 300px;
+                            background: white;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                            padding: 15px;
+                            z-index: 1000;
+                        }
+                        .notifications-dropdown h4 {
+                            margin-top: 0;
+                            padding-bottom: 10px;
+                            border-bottom: 1px solid #e0e0e0;
+                        }
+                        .notification-item {
+                            padding: 10px 0;
+                            border-bottom: 1px solid #f5f5f5;
+                        }
+                        .notification-item.unread {
+                            background: #f5f9ff;
+                            padding: 10px;
+                            margin: 0 -15px;
+                            padding-left: 15px;
+                            padding-right: 15px;
+                            border-left: 3px solid #1a237e;
+                        }
+                        .notification-item p {
+                            margin: 5px 0;
+                        }
+                        .notification-time {
+                            font-size: 12px;
+                            color: #757575;
+                        }
+                        .view-all {
+                            display: block;
+                            text-align: center;
+                            padding: 10px 0;
+                            margin-top: 10px;
+                            color: #1a237e;
+                            text-decoration: none;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    
+                    // Remove existing dropdown if present
+                    const existingDropdown = document.querySelector('.notifications-dropdown');
+                    if (existingDropdown) {
+                        existingDropdown.remove();
+                    } else {
+                        // Add dropdown to document
+                        document.body.appendChild(dropdown);
+                        
+                        // Close dropdown when clicking outside
+                        document.addEventListener('click', function closeDropdown(e) {
+                            if (!dropdown.contains(e.target) && e.target !== notificationIcon && !notificationIcon.contains(e.target)) {
+                                dropdown.remove();
+                                document.removeEventListener('click', closeDropdown);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

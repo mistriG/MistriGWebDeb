@@ -200,6 +200,65 @@ mobileMenuBtn.addEventListener('click', () => {
 });
 }
 
+// Initialize page-specific functionality
+document.addEventListener('DOMContentLoaded', function() {
+  // Update navigation to reflect logged-in status
+  updateNavigation();
+  
+  // Set up hero button to scroll to services
+  const hireWorkerHeroBtn = document.querySelector('.hero-buttons .btn-primary');
+  if (hireWorkerHeroBtn) {
+    hireWorkerHeroBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const servicesSection = document.querySelector('.services');
+      if (servicesSection) {
+        servicesSection.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        // If on a different page, redirect to the homepage services section
+        window.location.href = '/#services';
+      }
+    });
+  }
+  
+  // Make service cards clickable
+  const serviceCards = document.querySelectorAll('.service-card');
+  if (serviceCards.length > 0) {
+    serviceCards.forEach(card => {
+      card.style.cursor = 'pointer';
+      
+      card.addEventListener('click', function() {
+        // Get the service type from the card's heading
+        const serviceType = card.querySelector('h3').innerText.split(' ')[0].toLowerCase();
+        
+        // Redirect to map page with service type as query parameter
+        if (checkAuth()) {
+          window.location.href = '/src/pages/map.html?service=' + serviceType;
+        } else {
+          // If not logged in, redirect to login page first
+          localStorage.setItem('redirectAfterLogin', '/src/pages/map.html?service=' + serviceType);
+          window.location.href = '/src/pages/login.html';
+        }
+      });
+    });
+  }
+  
+  // If on map page, check for service parameter and activate the correct filter
+  if (window.location.pathname.includes('/map.html')) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const service = urlParams.get('service');
+    
+    if (service) {
+      // Find and click the appropriate filter button
+      setTimeout(() => {
+        const filterButton = document.querySelector(`.filter-button[data-service="${service}"]`);
+        if (filterButton) {
+          filterButton.click();
+        }
+      }, 1000); // Small delay to ensure the map has loaded
+    }
+  }
+});
+
 // Form Submission Handlers
 document.querySelectorAll('form').forEach(form => {
     form.addEventListener('submit', async (e) => {
@@ -367,57 +426,8 @@ document.querySelectorAll('.service-card, .job-card, .category-card').forEach(ca
 });
 
 // Location and Worker Finding functionality
-import lottie from 'lottie-web';
-
-// Load location animation data
-const locationAnimationData = {
-    "v": "5.7.4",
-    "fr": 30,
-    "ip": 0,
-    "op": 60,
-    "w": 200,
-    "h": 200,
-    "nm": "Location Animation",
-    "ddd": 0,
-    "assets": [],
-    "layers": [
-        {
-            "ddd": 0,
-            "ind": 1,
-            "ty": 4,
-            "nm": "Pin",
-            "sr": 1,
-            "ks": {
-                "o": { "a": 0, "k": 100 },
-                "p": { "a": 1, "k": [
-                    { "t": 0, "s": [100, 100], "h": 1 },
-                    { "t": 30, "s": [100, 90], "h": 1 },
-                    { "t": 60, "s": [100, 100], "h": 1 }
-                ]},
-                "a": { "a": 0, "k": [0, 0, 0] },
-                "s": { "a": 0, "k": [100, 100, 100] }
-            },
-            "shapes": [
-                {
-                    "ty": "gr",
-                    "it": [
-                        {
-                            "ty": "rc",
-                            "d": 1,
-                            "s": { "a": 0, "k": [40, 60] },
-                            "p": { "a": 0, "k": [0, 0] },
-                            "r": { "a": 0, "k": 20 }
-                        },
-                        {
-                            "ty": "fl",
-                            "c": { "a": 0, "k": [0.145, 0.388, 0.847, 1] }
-                        }
-                    ]
-                }
-            ]
-        }
-    ]
-};
+// Remove the import statement that's causing errors
+// import lottie from 'lottie-web';
 
 // Initialize location modal and animation
 document.addEventListener('DOMContentLoaded', () => {
@@ -427,13 +437,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const animationContainer = document.getElementById('locationAnimation');
 
     if (animationContainer) {
-        const anim = lottie.loadAnimation({
-            container: animationContainer,
-            renderer: 'svg',
-            loop: true,
-            autoplay: true,
-            animationData: locationAnimationData
-        });
+        // Simple CSS animation instead of lottie
+        animationContainer.innerHTML = '<div class="pulsing-dot"></div>';
     }
 
     // Handle category card clicks
@@ -633,8 +638,12 @@ function updateNavigation() {
     const navLinks = document.querySelector('.nav-links');
     if (!navLinks) return;
 
-    const joinButton = navLinks.querySelector('a[href="/src/pages/join.html"]');
+    const joinButton = navLinks.querySelector('a[href="/src/pages/login.html"]');
     if (!joinButton) return;
+
+    // Find the "Find Work" and "Hire Workers" navigation links
+    const findWorkLink = navLinks.querySelector('a[href="/src/pages/find-work.html"]');
+    const hireWorkersLink = navLinks.querySelector('a[href="/src/pages/hire-workers.html"]');
 
     if (checkAuth()) {
         // User is logged in, replace Join Now button with user info
@@ -652,6 +661,10 @@ function updateNavigation() {
         
         // Replace the join button with the user profile element
         joinButton.parentElement.replaceChild(userProfileElement, joinButton);
+        
+        // Hide "Find Work" and "Hire Workers" links for logged in users as requested
+        if (findWorkLink) findWorkLink.style.display = 'none';
+        if (hireWorkersLink) hireWorkersLink.style.display = 'none';
         
         // Add logout button if it doesn't exist
         if (!navLinks.querySelector('.logout-btn')) {

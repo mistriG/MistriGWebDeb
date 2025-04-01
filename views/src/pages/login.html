@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Login - MistriG</title>
+    <link rel="stylesheet" href="../style.css">
     <style>
         * {
             margin: 0;
@@ -15,38 +16,7 @@
         body {
             background: #f5f5f5;
             min-height: 100vh;
-        }
-
-        .navbar {
-            background: #fff;
-            padding: 1rem 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #2c3e50;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: #2c3e50;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: #3498db;
+            margin-top: 80px; /* Add margin to account for fixed navbar */
         }
 
         .login-container {
@@ -187,60 +157,25 @@
         .register-link a:hover {
             text-decoration: underline;
         }
-
-        .mobile-menu-btn {
-            display: none;
-            flex-direction: column;
-            gap: 6px;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .mobile-menu-btn span {
-            display: block;
-            width: 25px;
-            height: 2px;
-            background: #2c3e50;
-            transition: all 0.3s;
-        }
-
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: #fff;
-                padding: 1rem;
-                flex-direction: column;
-                text-align: center;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            }
-
-            .nav-links.active {
-                display: flex;
-            }
-
-            .mobile-menu-btn {
-                display: flex;
-            }
-        }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <a href="/" class="logo">MistriG</a>
-        <div class="mobile-menu-btn">
-            <span></span>
-            <span></span>
-            <span></span>
+        <div class="nav-brand">
+            <a href="/">
+                <img class="ic" src="/src/Images/mg.png" alt="MistriG">
+                MistriG
+            </a>
         </div>
+        <button class="mobile-menu-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
         <div class="nav-links">
             <a href="/">Home</a>
             <a href="/src/pages/find-work.html">Find Work</a>
-            <a href="/src/pages/hire-workers.html">Hire Workers</a>
-            <a href="/src/pages/login.html">Login</a>
+            <a href="/src/pages/login.html" class="btn-primary">Join Now</a>
         </div>
     </nav>
 

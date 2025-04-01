@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Settings - MistriG</title>
+    <!-- Include Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="src/style.css">
+    <link rel="stylesheet" href="src/worker-dashboard.css">
+    <style>
+        /* Settings specific styles */
+        .settings-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        .settings-tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+        
+        .settings-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .settings-tab.active {
+            color: #1a237e;
+            font-weight: bold;
+        }
+        
+        .settings-tab.active:after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #1a237e;
+        }
+        
+        .settings-content {
+            display: none;
+        }
+        
+        .settings-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .form-control:focus {
+            border-color: #1a237e;
+            outline: none;
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .form-check input {
+            margin-right: 10px;
+        }
+        
+        .btn-save {
+            background: #1a237e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn-save:hover {
+            background: #0e1859;
+        }
+        
+        .btn-danger {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+        
+        .notification-setting {
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .notification-details h4 {
+            margin: 0 0 5px 0;
+        }
+        
+        .notification-details p {
+            margin: 0;
+            color: #757575;
+            font-size: 14px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .switch-slider {
+            background-color: #1a237e;
+        }
+        
+        input:checked + .switch-slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo-container">
+                <img src="/src/Images/mg.png" alt="MistriG">
+                <h2>MistriG</h2>
+            </div>
+            <ul class="nav-menu">
+                <li>
+                    <a href="worker-dashboard.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="worker-orders.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        Orders
+                    </a>
+                </li>
+                <li>
+                    <a href="worker-earnings.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        Earnings
+                    </a>
+                </li>
+                <li>
+                    <a href="worker-profile.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Profile
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="active">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="index.html" id="logoutBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Settings Content -->
+        <div class="main-content">
+            <!-- Top Header with Status Toggle and User Info -->
+            <div class="top-header">
+                <div class="worker-status">
+                    <label class="status-toggle">
+                        <input type="checkbox" id="statusToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="status-text offline" id="offlineStatus">Offline</span>
+                    <span class="status-text online" id="onlineStatus">Online</span>
+                    <span class="loader" id="statusLoader"></span>
+                </div>
+                <div class="user-controls">
+                    <div class="notification-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="user-profile" id="userProfileBtn">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Profile">
+                        <span>Rahul Sharma</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Container -->
+            <div class="settings-container">
+                <h2>Settings</h2>
+                
+                <div class="settings-tabs">
+                    <div class="settings-tab active" data-tab="account">Account</div>
+                    <div class="settings-tab" data-tab="notifications">Notifications</div>
+                    <div class="settings-tab" data-tab="privacy">Privacy</div>
+                    <div class="settings-tab" data-tab="security">Security</div>
+                </div>
+                
+                <!-- Account Settings -->
+                <div class="settings-content active" id="account-settings">
+                    <form id="account-form">
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" class="form-control" value="Rahul Sharma">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" class="form-control" value="rahul.sharma@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="tel" id="phone" class="form-control" value="+91 98765 43210">
+                        </div>
+                        <div class="form-group">
+                            <label for="skill">Primary Skill</label>
+                            <select id="skill" class="form-control">
+                                <option value="plumber" selected>Plumber</option>
+                                <option value="electrician">Electrician</option>
+                                <option value="carpenter">Carpenter</option>
+                                <option value="painter">Painter</option>
+                                <option value="cleaner">Cleaner</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" class="form-control" value="Dwarka, New Delhi">
+                        </div>
+                        <div class="form-group">
+                            <label for="experience">Experience (years)</label>
+                            <input type="number" id="experience" class="form-control" value="8">
+                        </div>
+                        <div class="form-group">
+                            <label for="bio">Bio/Description</label>
+                            <textarea id="bio" class="form-control" rows="4">Professional plumber with 8 years of experience. Specializing in installations, repairs, and maintenance of plumbing systems.</textarea>
+                        </div>
+                        <button type="submit" class="btn-save">Save Changes</button>
+                    </form>
+                </div>
+                
+                <!-- Notification Settings -->
+                <div class="settings-content" id="notifications-settings">
+                    <div class="notification-setting">
+                        <div class="notification-details">
+                            <h4>New Order Alerts</h4>
+                            <p>Get notified when a new order is available</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <div class="notification-setting">
+                        <div class="notification-details">
+                            <h4>Order Status Updates</h4>
+                            <p>Receive updates when order status changes</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <div class="notification-setting">
+                        <div class="notification-details">
+                            <h4>Payment Notifications</h4>
+                            <p>Get notified about new payments</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <div class="notification-setting">
+                        <div class="notification-details">
+                            <h4>Marketing Communications</h4>
+                            <p>Receive offers, news, and updates from MistriG</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <button class="btn-save">Save Preferences</button>
+                </div>
+                
+                <!-- Privacy Settings -->
+                <div class="settings-content" id="privacy-settings">
+                    <div class="form-group">
+                        <label>Profile Visibility</label>
+                        <div class="form-check">
+                            <input type="radio" id="public" name="visibility" checked>
+                            <label for="public">Public - Anyone can see your profile</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" id="limited" name="visibility">
+                            <label for="limited">Limited - Only customers who booked you can see details</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Location Sharing</label>
+                        <div class="form-check">
+                            <input type="checkbox" id="share-location" checked>
+                            <label for="share-location">Share my live location when I'm working</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Contact Information</label>
+                        <div class="form-check">
+                            <input type="checkbox" id="share-phone" checked>
+                            <label for="share-phone">Share my phone number with customers</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" id="share-email">
+                            <label for="share-email">Share my email with customers</label>
+                        </div>
+                    </div>
+                    <button class="btn-save">Update Privacy Settings</button>
+                </div>
+                
+                <!-- Security Settings -->
+                <div class="settings-content" id="security-settings">
+                    <div class="form-group">
+                        <label for="current-password">Current Password</label>
+                        <input type="password" id="current-password" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-password">New Password</label>
+                        <input type="password" id="new-password" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm New Password</label>
+                        <input type="password" id="confirm-password" class="form-control">
+                    </div>
+                    <button class="btn-save">Change Password</button>
+                    
+                    <hr style="margin: 30px 0;">
+                    
+                    <h3>Two-Factor Authentication</h3>
+                    <p>Add an extra layer of security to your account by enabling two-factor authentication.</p>
+                    <button class="btn-save">Enable 2FA</button>
+                    
+                    <hr style="margin: 30px 0;">
+                    
+                    <h3>Account Deactivation</h3>
+                    <p>Temporarily deactivate your account. You can reactivate it anytime by logging in.</p>
+                    <button class="btn-danger">Deactivate Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/main.js"></script>
+    <script src="src/api-service.js"></script>
+    <script>
+        // Immediately set toggle state based on localStorage (before any events fire)
+        (function() {
+            const statusToggle = document.getElementById('statusToggle');
+            const offlineStatus = document.getElementById('offlineStatus');
+            const onlineStatus = document.getElementById('onlineStatus');
+            
+            if (statusToggle) {
+                const savedStatus = localStorage.getItem('workerStatus');
+                // Explicitly check for the string 'online' to set the toggle
+                if (savedStatus === 'online') {
+                    statusToggle.checked = true;
+                    offlineStatus.style.display = 'none';
+                    onlineStatus.style.display = 'inline-block';
+                } else {
+                    // Make sure to set offline state explicitly
+                    statusToggle.checked = false;
+                    onlineStatus.style.display = 'none';
+                    offlineStatus.style.display = 'inline-block';
+                    // Ensure we have a workerStatus value stored
+                    if (!savedStatus) {
+                        localStorage.setItem('workerStatus', 'offline');
+                    }
+                }
+            }
+        })();
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Settings tab switching
+            const tabs = document.querySelectorAll('.settings-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Hide all settings content
+                    document.querySelectorAll('.settings-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Show the selected settings content
+                    const tabName = this.dataset.tab;
+                    document.getElementById(`${tabName}-settings`).classList.add('active');
+                });
+            });
+            
+            // Form submission handling
+            document.getElementById('account-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('Account settings would be saved here!');
+            });
+            
+            // Status toggle functionality (reusing from dashboard)
+            const statusToggle = document.getElementById('statusToggle');
+            const offlineStatus = document.getElementById('offlineStatus');
+            const onlineStatus = document.getElementById('onlineStatus');
+            const statusLoader = document.getElementById('statusLoader');
+            
+            if (statusToggle) {
+                statusToggle.addEventListener('change', function() {
+                    statusLoader.style.display = 'inline-block';
+                    
+                    const isOnline = this.checked;
+                    
+                    // Simulate API call
+                    setTimeout(() => {
+                        if (isOnline) {
+                            offlineStatus.style.display = 'none';
+                            onlineStatus.style.display = 'inline-block';
+                        } else {
+                            onlineStatus.style.display = 'none';
+                            offlineStatus.style.display = 'inline-block';
+                        }
+                        
+                        localStorage.setItem('workerStatus', isOnline ? 'online' : 'offline');
+                        statusLoader.style.display = 'none';
+                    }, 1000);
+                });
+            }
+            
+            // Logout functionality
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    if (confirm('Are you sure you want to logout?')) {
+                        // Clear local storage
+                        localStorage.removeItem('workerToken');
+                        localStorage.removeItem('userType');
+                        localStorage.removeItem('userFirstName');
+                        localStorage.removeItem('workerStatus');
+                        localStorage.removeItem('locationWatchId');
+                        
+                        // Redirect to homepage
+                        window.location.href = '/';
+                    }
+                });
+            }
+            
+            // Add notification icon click handler
+            const notificationIcon = document.querySelector('.notification-icon');
+            if (notificationIcon) {
+                notificationIcon.addEventListener('click', function() {
+                    // Create and show notifications dropdown
+                    const dropdown = document.createElement('div');
+                    dropdown.className = 'notifications-dropdown';
+                    dropdown.innerHTML = `
+                        <h4>Notifications</h4>
+                        <div class="notification-item unread">
+                            <p><strong>New Order Available</strong></p>
+                            <p>Sink Installation request in your area</p>
+                            <p class="notification-time">5 minutes ago</p>
+                        </div>
+                        <div class="notification-item unread">
+                            <p><strong>Customer Reminder</strong></p>
+                            <p>Your scheduled service at Amit's place is tomorrow</p>
+                            <p class="notification-time">2 hours ago</p>
+                        </div>
+                        <div class="notification-item">
+                            <p><strong>Payment Received</strong></p>
+                            <p>You received ₹1,500 for Pipe Fitting service</p>
+                            <p class="notification-time">Yesterday</p>
+                        </div>
+                        <a href="#" class="view-all">View All Notifications</a>
+                    `;
+                    
+                    // Add styles for the dropdown
+                    const style = document.createElement('style');
+                    style.innerHTML = `
+                        .notifications-dropdown {
+                            position: absolute;
+                            top: 60px;
+                            right: 80px;
+                            width: 300px;
+                            background: white;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                            padding: 15px;
+                            z-index: 1000;
+                        }
+                        .notifications-dropdown h4 {
+                            margin-top: 0;
+                            padding-bottom: 10px;
+                            border-bottom: 1px solid #e0e0e0;
+                        }
+                        .notification-item {
+                            padding: 10px 0;
+                            border-bottom: 1px solid #f5f5f5;
+                        }
+                        .notification-item.unread {
+                            background: #f5f9ff;
+                            padding: 10px;
+                            margin: 0 -15px;
+                            padding-left: 15px;
+                            padding-right: 15px;
+                            border-left: 3px solid #1a237e;
+                        }
+                        .notification-item p {
+                            margin: 5px 0;
+                        }
+                        .notification-time {
+                            font-size: 12px;
+                            color: #757575;
+                        }
+                        .view-all {
+                            display: block;
+                            text-align: center;
+                            padding: 10px 0;
+                            margin-top: 10px;
+                            color: #1a237e;
+                            text-decoration: none;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    
+                    // Remove existing dropdown if present
+                    const existingDropdown = document.querySelector('.notifications-dropdown');
+                    if (existingDropdown) {
+                        existingDropdown.remove();
+                    } else {
+                        // Add dropdown to document
+                        document.body.appendChild(dropdown);
+                        
+                        // Close dropdown when clicking outside
+                        document.addEventListener('click', function closeDropdown(e) {
+                            if (!dropdown.contains(e.target) && e.target !== notificationIcon && !notificationIcon.contains(e.target)) {
+                                dropdown.remove();
+                                document.removeEventListener('click', closeDropdown);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 
