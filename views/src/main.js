@@ -1,6 +1,90 @@
 // API Configuration
 const API_URL = 'http://localhost:3002/api';
 
+// Global non-export version for direct script use
+async function registerWorker(workerData) {
+    try {
+        // Restructure the data to match backend expectations
+        const formattedData = {
+            fullname: workerData.fullname,
+            email: workerData.email,
+            password: workerData.password,
+            phoneNumber: workerData.phoneNumber || workerData.phone,
+            profession: workerData.profession,
+            experience: Number(workerData.experience),
+            location: workerData.location,
+            hourlyRate: Number(workerData.hourlyRate),
+            bio: workerData.description || workerData.bio || '',
+            skills: workerData.skills || []
+        };
+
+        // Add address if provided
+        if (workerData.address) {
+            formattedData.address = workerData.address;
+        }
+
+        console.log('Sending worker registration data:', JSON.stringify(formattedData));
+        
+        const response = await fetch(`${API_URL}/workers/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formattedData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Clear any existing tokens or user data
+            localStorage.removeItem('token');
+            localStorage.removeItem('workerToken');
+            localStorage.removeItem('userType');
+            localStorage.removeItem('userFirstName');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userMobileNumber');
+            
+            // Set new worker information
+            localStorage.setItem('workerToken', data.token);
+            localStorage.setItem('userType', 'worker');
+            
+            // Save worker data for displaying in UI
+            if (data.worker && data.worker.fullname && data.worker.fullname.firstname) {
+                localStorage.setItem('userFirstName', data.worker.fullname.firstname);
+            } else if (formattedData.fullname && formattedData.fullname.firstname) {
+                localStorage.setItem('userFirstName', formattedData.fullname.firstname);
+            }
+            
+            if (data.worker && data.worker.email) {
+                localStorage.setItem('userEmail', data.worker.email);
+            } else {
+                localStorage.setItem('userEmail', formattedData.email);
+            }
+
+            if (data.worker && data.worker.phoneNumber) {
+                localStorage.setItem('userMobileNumber', data.worker.phoneNumber);
+            } else if (formattedData.phoneNumber) {
+                localStorage.setItem('userMobileNumber', formattedData.phoneNumber);
+            }
+            
+            console.log('Worker registered successfully:', data.worker ? data.worker.fullname : formattedData.fullname);
+            window.location.href = '/src/pages/worker-dashboard.html';
+            return data;
+        }
+        
+        // Handle validation errors array from backend
+        if (data.errors && Array.isArray(data.errors)) {
+            const errorMessage = data.errors.map(err => err.msg).join('\n');
+            throw new Error(errorMessage);
+        }
+        
+        throw new Error(data.message || 'Registration failed');
+    } catch (error) {
+        console.error('Worker registration error:', error);
+        throw error;
+    }
+}
+
 // Check if user is authenticated
 function checkAuth() {
     const token = localStorage.getItem('token');
@@ -52,6 +136,14 @@ function requireAuth(type = 'any') {
 // Authentication functions
 async function login(email, password) {
     try {
+        // Clear any existing tokens and data first
+        localStorage.removeItem('token');
+        localStorage.removeItem('workerToken');
+        localStorage.removeItem('userType');
+        localStorage.removeItem('userFirstName');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userMobileNumber');
+
         const response = await fetch(`${API_URL}/users/login`, {
             method: 'POST',
             headers: {
@@ -76,6 +168,7 @@ async function login(email, password) {
                 localStorage.setItem('userMobileNumber', data.user.mobileNumber);
             }
             
+            console.log('Client logged in successfully:', data.user ? data.user.fullname : email);
             return data;
         }
         throw new Error(data.message);
@@ -86,6 +179,14 @@ async function login(email, password) {
 
 async function register(userData) {
     try {
+        // Clear any existing tokens and data first
+        localStorage.removeItem('token');
+        localStorage.removeItem('workerToken');
+        localStorage.removeItem('userType');
+        localStorage.removeItem('userFirstName');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userMobileNumber');
+
         console.log('Sending registration data:', JSON.stringify(userData));
         const response = await fetch(`${API_URL}/users/register`, {
             method: 'POST',
@@ -100,16 +201,25 @@ async function register(userData) {
             localStorage.setItem('userType', 'client');
             
             // Save user data for displaying in UI
-            if (userData.fullname && userData.fullname.firstname) {
+            if (data.user && data.user.fullname && data.user.fullname.firstname) {
+                localStorage.setItem('userFirstName', data.user.fullname.firstname);
+            } else if (userData.fullname && userData.fullname.firstname) {
                 localStorage.setItem('userFirstName', userData.fullname.firstname);
             }
-            if (userData.email) {
+            
+            if (data.user && data.user.email) {
+                localStorage.setItem('userEmail', data.user.email);
+            } else if (userData.email) {
                 localStorage.setItem('userEmail', userData.email);
             }
-            if (userData.mobileNumber) {
+            
+            if (data.user && data.user.mobileNumber) {
+                localStorage.setItem('userMobileNumber', data.user.mobileNumber);
+            } else if (userData.mobileNumber) {
                 localStorage.setItem('userMobileNumber', userData.mobileNumber);
             }
             
+            console.log('Client registered successfully:', data.user ? data.user.fullname : userData.fullname);
             return data;
         }
         // Handle validation errors array from backend
@@ -127,6 +237,14 @@ async function register(userData) {
 // Worker Authentication functions
 async function workerLogin(email, password) {
     try {
+        // Clear any existing tokens and data first
+        localStorage.removeItem('token');
+        localStorage.removeItem('workerToken');
+        localStorage.removeItem('userType');
+        localStorage.removeItem('userFirstName');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userMobileNumber');
+
         const response = await fetch(`${API_URL}/workers/login`, {
             method: 'POST',
             headers: {
@@ -137,6 +255,7 @@ async function workerLogin(email, password) {
         });
         const data = await response.json();
         if (response.ok) {
+            // Set worker token and user type
             localStorage.setItem('workerToken', data.token);
             localStorage.setItem('userType', 'worker');
             
@@ -151,33 +270,7 @@ async function workerLogin(email, password) {
                 localStorage.setItem('userMobileNumber', data.worker.phoneNumber);
             }
             
-            return data;
-        }
-        throw new Error(data.message);
-    } catch (error) {
-        throw error;
-    }
-}
-
-async function workerRegister(workerData) {
-    try {
-        const response = await fetch(`${API_URL}/workers/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(workerData)
-        });
-        const data = await response.json();
-        if (response.ok) {
-            localStorage.setItem('workerToken', data.token);
-            localStorage.setItem('userType', 'worker');
-            
-            // Save first name for displaying in UI
-            if (workerData.fullname && workerData.fullname.firstname) {
-                localStorage.setItem('userFirstName', workerData.fullname.firstname);
-            }
-            
+            console.log('Worker logged in successfully:', data.worker ? data.worker.fullname : email);
             return data;
         }
         throw new Error(data.message);
@@ -260,87 +353,91 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Form Submission Handlers
-document.querySelectorAll('form').forEach(form => {
-    form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData);
+document.addEventListener('DOMContentLoaded', function() {
+    // Get forms by ID instead of selecting all forms
+    const loginForm = document.getElementById('loginForm');
+    const workerLoginForm = document.getElementById('workerLoginForm');
+    const registerForm = document.getElementById('registerForm');
     
-        try {
-            if (form.id === 'loginForm') {
-                await login(data.email, data.password);
-                localStorage.setItem('userType', 'client');
+    // Handle client login form
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (!email || !password) {
+                    throw new Error('Please enter both email and password');
+                }
+                
+                await login(email, password);
                 // Redirect to the intended page or dashboard
                 const redirectUrl = localStorage.getItem('redirectUrl') || '/dashboard.html';
                 localStorage.removeItem('redirectUrl');
                 window.location.href = redirectUrl;
-            } else if (form.id === 'workerLoginForm') {
-                await workerLogin(data.email, data.password);
+            } catch (error) {
+                alert(error.message || 'Login failed. Please check your credentials.');
+            }
+        });
+    }
+    
+    // Handle worker login form
+    if (workerLoginForm) {
+        workerLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (!email || !password) {
+                    throw new Error('Please enter both email and password');
+                }
+                
+                await workerLogin(email, password);
                 // Redirect to the intended page or worker dashboard
-                const redirectUrl = localStorage.getItem('redirectUrl') || '/worker-dashboard.html';
+                const redirectUrl = localStorage.getItem('redirectUrl') || '/src/pages/worker-dashboard.html';
                 localStorage.removeItem('redirectUrl');
                 window.location.href = redirectUrl;
-            } else if (form.id === 'registerForm') {
-                await register({
+            } catch (error) {
+                alert(error.message || 'Login failed. Please check your credentials.');
+            }
+        });
+    }
+    
+    // Handle client registration form
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const firstname = document.getElementById('firstname').value;
+                const lastname = document.getElementById('lastname').value;
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const mobileNumber = document.getElementById('mobileNumber').value;
+                
+                if (!firstname || !lastname || !email || !password || !mobileNumber) {
+                    throw new Error('Please fill in all required fields');
+                }
+                
+                const userData = {
                     fullname: {
-                        firstname: data.firstname,
-                        lastname: data.lastname
+                        firstname: firstname,
+                        lastname: lastname
                     },
-                    email: data.email,
-                    password: data.password,
-                    mobileNumber: data.mobileNumber
-                });
+                    email: email,
+                    password: password,
+                    mobileNumber: mobileNumber
+                };
+                
+                await register(userData);
                 localStorage.setItem('userType', 'client');
                 window.location.href = '/dashboard.html';
-            } else if (form.id === 'workerRegisterForm') {
-                await workerRegister({
-                    fullname: {
-                        firstname: data.firstname,
-                        lastname: data.lastname
-                    },
-                    email: data.email,
-                    password: data.password,
-                    phoneNumber: data.phoneNumber,
-                    profession: data.profession,
-                    experience: Number(data.experience),
-                    location: data.location,
-                    bio: data.bio
-                });
-                window.location.href = '/worker-dashboard.html';
-            } else if (form.id === 'hireForm') {
-                if (!isClient()) {
-                    localStorage.setItem('redirectUrl', '/src/pages/hire-workers.html');
-                    window.location.href = '/src/pages/login.html';
-                    return;
-                }
-
-                const response = await fetch(`${API_URL}/jobs/create`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({
-                        serviceType: data.serviceType,
-                        location: data.location,
-                        budget: data.budget,
-                        date: data.date,
-                        description: data.description
-                    })
-                });
-
-                if (response.ok) {
-                    alert('Job posted successfully!');
-    form.reset();
-                } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message);
-                }
+            } catch (error) {
+                alert(error.message || 'Registration failed. Please try again.');
             }
-        } catch (error) {
-            alert(error.message);
-        }
-    });
+        });
+    }
 });
 
 // Handle protected route clicks
@@ -625,8 +722,7 @@ if (workerRegisterForm) {
                 bio: bio ? bio.value.trim() : ''
             };
             
-            await workerRegister(workerData);
-            window.location.href = '/worker-dashboard.html';
+            await registerWorker(workerData);
         } catch (error) {
             alert(error.message);
         }
@@ -643,12 +739,12 @@ function updateNavigation() {
 
     // Find the "Find Work" and "Hire Workers" navigation links
     const findWorkLink = navLinks.querySelector('a[href="/src/pages/find-work.html"]');
-    const hireWorkersLink = navLinks.querySelector('a[href="/src/pages/hire-workers.html"]');
+    const hireWorkersLink = navLinks.querySelector('a[href*="hire-workers.html"], a[href*="/#services"]');
 
     if (checkAuth()) {
         // User is logged in, replace Join Now button with user info
         const userType = localStorage.getItem('userType');
-        const dashboardUrl = userType === 'worker' ? '/worker-dashboard.html' : '/dashboard.html';
+        const dashboardUrl = userType === 'worker' ? '/src/pages/worker-dashboard.html' : '/dashboard.html';
         
         // Create a new user profile element
         const userProfileElement = document.createElement('a');
@@ -662,9 +758,14 @@ function updateNavigation() {
         // Replace the join button with the user profile element
         joinButton.parentElement.replaceChild(userProfileElement, joinButton);
         
-        // Hide "Find Work" and "Hire Workers" links for logged in users as requested
-        if (findWorkLink) findWorkLink.style.display = 'none';
-        if (hireWorkersLink) hireWorkersLink.style.display = 'none';
+        // Show/hide appropriate links based on user type
+        if (findWorkLink) {
+            findWorkLink.style.display = userType === 'worker' ? 'block' : 'none';
+        }
+        
+        if (hireWorkersLink) {
+            hireWorkersLink.style.display = userType === 'client' ? 'block' : 'none';
+        }
         
         // Add logout button if it doesn't exist
         if (!navLinks.querySelector('.logout-btn')) {
@@ -674,17 +775,38 @@ function updateNavigation() {
             logoutBtn.textContent = 'Logout';
             logoutBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                // Clear authentication data
-                localStorage.removeItem('token');
-                localStorage.removeItem('workerToken');
-                localStorage.removeItem('userType');
-                localStorage.removeItem('userFirstName');
-                // Redirect to home page
-                window.location.href = '/';
+                // Use our proper logout function
+                logout();
             });
             navLinks.appendChild(logoutBtn);
         }
+    } else {
+        // User is not logged in, show appropriate links
+        if (findWorkLink) findWorkLink.style.display = 'block';
+        if (hireWorkersLink) hireWorkersLink.style.display = 'block';
+        
+        // Remove logout button if it exists
+        const logoutBtn = navLinks.querySelector('.logout-btn');
+        if (logoutBtn) {
+            navLinks.removeChild(logoutBtn);
+        }
     }
+}
+
+// Add a proper logout function
+export function logout() {
+    // Clear all authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('workerToken');
+    localStorage.removeItem('userType');
+    localStorage.removeItem('userFirstName');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userMobileNumber');
+    localStorage.removeItem('redirectUrl');
+    localStorage.removeItem('redirectAfterLogin');
+    
+    // Redirect to home page
+    window.location.href = '/';
 }
 
 

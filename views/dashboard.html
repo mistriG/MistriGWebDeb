@@ -4,443 +4,435 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Dashboard - MistriG</title>
+    <!-- Include Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="src/style.css">
+    <link rel="stylesheet" href="src/dashboard.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        body {
-            background: #f5f5f5;
+        /* Dashboard specific styles */
+        .dashboard-container {
+            display: flex;
             min-height: 100vh;
         }
-
-        .navbar {
-            background: #fff;
-            padding: 1rem 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #2c3e50;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: #2c3e50;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: #3498db;
-        }
-
-        .dashboard-container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .dashboard-header h1 {
-            color: #2c3e50;
-            font-size: 2.2rem;
-        }
-
-        .client-profile {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            padding: 2rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .profile-avatar {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background: #3498db;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        
+        .sidebar {
+            width: 250px;
+            background: #1a237e;
             color: white;
-            font-size: 4rem;
-            font-weight: 300;
+            padding: 20px 0;
         }
-
-        .profile-info {
+        
+        .main-content {
             flex: 1;
-            min-width: 300px;
+            padding: 20px;
+            background: #f5f5f5;
         }
-
-        .profile-info h2 {
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-        }
-
-        .profile-info p {
-            color: #7f8c8d;
-            margin-bottom: 1rem;
-            line-height: 1.5;
-        }
-
-        .profile-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .profile-detail {
-            margin-bottom: 0.5rem;
-        }
-
-        .profile-detail strong {
-            color: #2c3e50;
-        }
-
-        .profile-actions {
+        
+        .logo-container {
+            padding: 0 20px 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
             display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .jobs-section {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
         }
-
-        .section-header h2 {
-            color: #2c3e50;
+        
+        .logo-container img {
+            width: 40px;
+            margin-right: 10px;
         }
-
-        .job-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
+        
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
-
-        .job-card {
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 1.5rem;
+        
+        .nav-menu li {
+            padding: 0;
+        }
+        
+        .nav-menu a {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
             transition: all 0.3s;
         }
-
-        .job-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        
+        .nav-menu a:hover, .nav-menu a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
         }
-
-        .job-card h3 {
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
+        
+        .nav-menu a svg {
+            margin-right: 10px;
         }
-
-        .job-card p {
-            color: #7f8c8d;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-        }
-
-        .job-meta {
+        
+        .top-header {
             display: flex;
             justify-content: space-between;
-            color: #95a5a6;
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .user-controls {
+            display: flex;
+            align-items: center;
+        }
+        
+        .notification-icon {
+            margin-right: 20px;
+            position: relative;
+        }
+        
+        .notification-icon .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #f44336;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .user-profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .achievement-card {
+            background: linear-gradient(135deg, #1a237e, #3949ab);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .achievement-icon {
+            background: rgba(255,255,255,0.2);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+        }
+        
+        .achievement-content h3 {
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        
+        .achievement-content p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .map-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        #map {
+            height: 300px;
+            border-radius: 10px;
+        }
+        
+        .active-projects {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .project-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
         }
 
-        .job-status {
+        .project-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .project-card:last-child {
+            margin-bottom: 0;
+        }
+        
+        .project-status {
             display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            margin-bottom: 1rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
         }
 
         .status-in-progress {
-            background: #f1c40f20;
-            color: #f1c40f;
-            border: 1px solid #f1c40f;
+            background: #fff3e0;
+            color: #f57c00;
         }
 
         .status-completed {
-            background: #2ecc7120;
-            color: #2ecc71;
-            border: 1px solid #2ecc71;
+            background: #e8f5e9;
+            color: #2e7d32;
         }
 
         .status-pending {
-            background: #e74c3c20;
-            color: #e74c3c;
-            border: 1px solid #e74c3c;
+            background: #ede7f6;
+            color: #512da8;
+        }
+        
+        .project-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+            gap: 10px;
         }
 
         .btn {
             display: inline-block;
-            padding: 0.6rem 1.2rem;
-            background: #3498db;
-            color: white;
-            border: none;
+            padding: 8px 16px;
             border-radius: 5px;
-            cursor: pointer;
             font-size: 0.9rem;
-            font-weight: 500;
+            cursor: pointer;
             text-decoration: none;
             transition: background 0.3s;
         }
 
-        .btn:hover {
-            background: #2980b9;
+        .btn-primary {
+            background: #1a237e;
+            color: white;
+            border: none;
         }
 
         .btn-outline {
             background: transparent;
-            border: 1px solid #3498db;
-            color: #3498db;
+            border: 1px solid #1a237e;
+            color: #1a237e;
+        }
+        
+        .btn-primary:hover {
+            background: #283593;
         }
 
         .btn-outline:hover {
-            background: #f0f7fc;
-        }
-
-        .mobile-menu-btn {
-            display: none;
-            flex-direction: column;
-            gap: 6px;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .mobile-menu-btn span {
-            display: block;
-            width: 25px;
-            height: 2px;
-            background: #2c3e50;
-            transition: all 0.3s;
+            background: #f5f5f5;
         }
 
         @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: #fff;
-                padding: 1rem;
+            .dashboard-container {
                 flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 10px 0;
+            }
+            
+            .logo-container {
+                padding: 0 10px 10px;
+            }
+            
+            .main-content {
+                padding: 10px;
+            }
+            
+            .project-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
                 text-align: center;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                z-index: 10;
-            }
-
-            .nav-links.active {
-                display: flex;
-            }
-
-            .mobile-menu-btn {
-                display: flex;
-            }
-
-            .dashboard-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <a href="/" class="logo">MistriG</a>
-        <div class="mobile-menu-btn">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <div class="nav-links">
-            <a href="/">Home</a>
-            <a href="/src/pages/hire-workers.html">Hire Workers</a>
-            <a href="/dashboard.html" class="active">Dashboard</a>
-            <a href="#" id="logoutBtn">Logout</a>
-        </div>
-    </nav>
-
     <div class="dashboard-container">
-        <div class="dashboard-header">
-            <h1>Client Dashboard</h1>
-            <div>
-                <a href="/src/pages/hire-workers.html" class="btn">Post New Job</a>
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo-container">
+                <img src="/src/Images/mg.png" alt="MistriG">
+                <h2>MistriG</h2>
             </div>
+            <ul class="nav-menu">
+                <li>
+                    <a href="#" class="active">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="/#services">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                        Hire Workers
+                    </a>
+                </li>
+                <li>
+                    <a href="/src/pages/previous-hiring.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        Previous Hiring
+                    </a>
+                </li>
+                <li>
+                    <a href="/src/pages/client-profile.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Profile
+                    </a>
+                </li>
+                <li>
+                    <a href="/src/pages/client-settings.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="logoutBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        Logout
+                    </a>
+                </li>
+            </ul>
         </div>
 
-        <div class="client-profile">
-            <div class="profile-avatar" id="profileInitial">C</div>
-            <div class="profile-info">
-                <h2 id="clientName">Client Name</h2>
-                <p>Welcome to your MistriG dashboard. Here you can manage your projects, track progress, and hire skilled workers for your needs.</p>
-                
-                <div class="profile-details">
-                    <div class="profile-detail">
-                        <strong>Email:</strong> <span id="clientEmail">client@example.com</span>
+        <!-- Main Dashboard Content -->
+        <div class="main-content">
+            <!-- Top Header with User Info -->
+            <div class="top-header">
+                <h1>Welcome back, <span id="clientName">Client</span>!</h1>
+                <div class="user-controls">
+                    <div class="notification-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <span class="badge">2</span>
                     </div>
-                    <div class="profile-detail">
-                        <strong>Phone:</strong> <span id="clientPhone">Not provided</span>
-                    </div>
-                    <div class="profile-detail">
-                        <strong>Location:</strong> <span id="clientLocation">Not specified</span>
-                    </div>
-                    <div class="profile-detail">
-                        <strong>Jobs Posted:</strong> <span id="jobsPosted">0</span>
-                    </div>
-                </div>
-                
-                <div class="profile-actions">
-                    <a href="#" class="btn" id="editProfileBtn">Edit Profile</a>
-                    <a href="#" class="btn btn-outline">Payment Methods</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="jobs-section">
-            <div class="section-header">
-                <h2>Active Projects</h2>
-            </div>
-            <div class="job-cards">
-                <div class="job-card">
-                    <span class="job-status status-in-progress">In Progress</span>
-                    <h3>Kitchen Renovation Plumbing</h3>
-                    <p>Complete plumbing installation for kitchen renovation, including sink, dishwasher, and refrigerator line.</p>
-                    <div class="job-meta">
-                        <span>Started: Aug 15, 2023</span>
-                        <span>$1,200</span>
-                    </div>
-                    <div class="job-meta">
-                        <span>Worker: John Smith</span>
-                        <span>80% Complete</span>
-                    </div>
-                    <a href="#" class="btn">View Details</a>
-                </div>
-                <div class="job-card">
-                    <span class="job-status status-pending">Pending Worker</span>
-                    <h3>Bathroom Tiling</h3>
-                    <p>Install ceramic tiles in master bathroom, approximately 120 sq ft including floor and shower area.</p>
-                    <div class="job-meta">
-                        <span>Posted: Aug 10, 2023</span>
-                        <span>$800 - $1,200</span>
-                    </div>
-                    <div class="job-meta">
-                        <span>Applicants: 3</span>
-                        <span>Pending Selection</span>
-                    </div>
-                    <a href="#" class="btn">Review Applicants</a>
+                    <div class="user-profile" id="userProfileBtn">
+                        <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="User Profile" id="userProfileImg">
+                        <span id="userProfileName">John Doe</span>
                 </div>
             </div>
         </div>
 
-        <div class="jobs-section">
-            <div class="section-header">
-                <h2>Completed Projects</h2>
+            <!-- Stats Cards -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <h3>Active Projects</h3>
+                    <h2>3</h2>
+                    <p>Currently in progress</p>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a237e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
             </div>
-            <div class="job-cards">
-                <div class="job-card">
-                    <span class="job-status status-completed">Completed</span>
-                    <h3>Living Room Painting</h3>
-                    <p>Painted living room walls and ceiling, approximately 500 sq ft with premium paint.</p>
-                    <div class="job-meta">
-                        <span>Completed: July 28, 2023</span>
-                        <span>$650</span>
-                    </div>
-                    <div class="job-meta">
-                        <span>Worker: Mike Johnson</span>
-                        <span>Rating: 5/5</span>
-                    </div>
-                    <a href="#" class="btn btn-outline">Leave Review</a>
+                <div class="stat-card">
+                    <h3>Completed Projects</h3>
+                    <h2>12</h2>
+                    <p>Total completed</p>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 </div>
-                <div class="job-card">
-                    <span class="job-status status-completed">Completed</span>
-                    <h3>Backyard Landscaping</h3>
-                    <p>Landscaped backyard with new plants, gravel pathways, and irrigation system installation.</p>
-                    <div class="job-meta">
-                        <span>Completed: July 15, 2023</span>
-                        <span>$2,200</span>
-                    </div>
-                    <div class="job-meta">
-                        <span>Worker: Green Thumb Landscaping</span>
-                        <span>Rating: 4.8/5</span>
-                    </div>
-                    <a href="#" class="btn btn-outline">View Details</a>
-                </div>
+                <div class="stat-card">
+                    <h3>Total Spent</h3>
+                    <h2>₹25,400</h2>
+                    <p>Lifetime value</p>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f57c00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
             </div>
         </div>
 
-        <div class="jobs-section">
-            <div class="section-header">
-                <h2>Recommended Services</h2>
-                <a href="#" class="btn btn-outline">View All</a>
-            </div>
-            <div class="job-cards">
-                <div class="job-card">
-                    <h3>Roof Maintenance</h3>
-                    <p>Regular roof inspections can prevent costly damage. Find skilled roofers in your area.</p>
-                    <div class="job-meta">
-                        <span>Recommended for Fall</span>
-                        <span>Avg. Cost: $200 - $500</span>
-                    </div>
-                    <a href="#" class="btn">Find Roofers</a>
+            <!-- Quick Actions Card -->
+            <div class="achievement-card">
+                <div class="achievement-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
                 </div>
-                <div class="job-card">
-                    <h3>HVAC Tune-Up</h3>
-                    <p>Ensure your heating system is ready for winter with a professional inspection.</p>
-                    <div class="job-meta">
-                        <span>Seasonal Recommendation</span>
-                        <span>Avg. Cost: $150 - $300</span>
+                <div class="achievement-content">
+                    <h3>Need a Professional?</h3>
+                    <p>Find skilled workers for your next project with just a few clicks.</p>
+                    <a href="/#services" class="btn btn-outline" style="color: white; border-color: white; margin-top: 10px;">Hire Now</a>
+            </div>
+        </div>
+
+            <!-- Map Container -->
+            <div class="map-container">
+                <h3>Available Workers Nearby</h3>
+                <div id="map"></div>
+            </div>
+            
+            <!-- Active Projects -->
+            <div class="active-projects">
+                <h3>Active Projects</h3>
+                <div class="project-card">
+                    <span class="project-status status-in-progress">In Progress</span>
+                    <h4>Kitchen Renovation</h4>
+                    <p><strong>Worker:</strong> Rahul Sharma</p>
+                    <p><strong>Started:</strong> 3 days ago</p>
+                    <p><strong>Progress:</strong> 60%</p>
+                    <div class="project-actions">
+                        <a href="#" class="btn btn-outline">View Details</a>
+                        <a href="#" class="btn btn-primary">Contact Worker</a>
                     </div>
-                    <a href="#" class="btn">Find HVAC Technicians</a>
+                </div>
+                <div class="project-card">
+                    <span class="project-status status-pending">Pending Start</span>
+                    <h4>Bathroom Plumbing</h4>
+                    <p><strong>Worker:</strong> Amit Patel</p>
+                    <p><strong>Scheduled:</strong> Tomorrow</p>
+                    <p><strong>Status:</strong> Worker Assigned</p>
+                    <div class="project-actions">
+                        <a href="#" class="btn btn-outline">View Details</a>
+                        <a href="#" class="btn btn-primary">Contact Worker</a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script type="module" src="/src/main.js"></script>
+    <!-- Load Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+     
+    <script src="src/main.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Check if user is logged in, redirect if not
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is logged in
             const token = localStorage.getItem('token');
             const userType = localStorage.getItem('userType');
             if (!token || userType !== 'client') {
@@ -448,215 +440,119 @@
                 return;
             }
             
-            // Populate user information
+            // Update user information
             const userFirstName = localStorage.getItem('userFirstName') || '';
             const userLastName = localStorage.getItem('userLastName') || '';
             const userEmail = localStorage.getItem('userEmail') || '';
-            const userPhone = localStorage.getItem('userMobileNumber') || 'Not provided';
-            const userLocation = localStorage.getItem('userLocation') || 'Not specified';
             
-            document.getElementById('clientName').textContent = `${userFirstName} ${userLastName}`;
-            document.getElementById('clientEmail').textContent = userEmail;
-            document.getElementById('clientPhone').textContent = userPhone;
-            document.getElementById('clientLocation').textContent = userLocation;
+            document.getElementById('clientName').textContent = userFirstName;
+            document.getElementById('userProfileName').textContent = `${userFirstName} ${userLastName}`;
             
-            // Set profile initial
-            if (userFirstName) {
-                document.getElementById('profileInitial').textContent = userFirstName.charAt(0).toUpperCase();
-            }
+            // Initialize map
+            const map = L.map('map').setView([28.6139, 77.2090], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
             
-            // Mobile menu toggle
-            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-            const navLinks = document.querySelector('.nav-links');
+            // Add some sample worker markers
+            const workers = [
+                { lat: 28.6129, lng: 77.2295, name: 'Rahul S.', skill: 'Plumber' },
+                { lat: 28.6219, lng: 77.2087, name: 'Amit P.', skill: 'Electrician' },
+                { lat: 28.6139, lng: 77.2090, name: 'Priya M.', skill: 'Painter' }
+            ];
             
-            if (mobileMenuBtn && navLinks) {
-                mobileMenuBtn.addEventListener('click', () => {
-                    navLinks.classList.toggle('active');
+            workers.forEach(worker => {
+                const marker = L.marker([worker.lat, worker.lng]).addTo(map);
+                marker.bindPopup(`<b>${worker.name}</b><br>${worker.skill}`);
+            });
+            
+            // Notification icon click handler
+            const notificationIcon = document.querySelector('.notification-icon');
+            if (notificationIcon) {
+                notificationIcon.addEventListener('click', function() {
+                    // Create notifications dropdown
+                    const dropdown = document.createElement('div');
+                    dropdown.className = 'notifications-dropdown';
+                    dropdown.innerHTML = `
+                        <h4>Notifications</h4>
+                        <div class="notification-item unread">
+                            <p><strong>Project Update</strong></p>
+                            <p>Kitchen renovation is 60% complete</p>
+                            <p class="notification-time">2 hours ago</p>
+                            </div>
+                        <div class="notification-item unread">
+                            <p><strong>Worker Assigned</strong></p>
+                            <p>Amit has been assigned to your plumbing project</p>
+                            <p class="notification-time">Yesterday</p>
+                            </div>
+                        <a href="#" class="view-all">View All Notifications</a>
+                `;
+                
+                    // Add dropdown styles
+                const style = document.createElement('style');
+                    style.innerHTML = `
+                        .notifications-dropdown {
+                            position: absolute;
+                            top: 60px;
+                            right: 80px;
+                            width: 300px;
+                            background: white;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                            padding: 15px;
+                        z-index: 1000;
+                    }
+                        .notification-item {
+                            padding: 10px 0;
+                            border-bottom: 1px solid #f5f5f5;
+                        }
+                        .notification-item.unread {
+                            background: #f5f9ff;
+                            padding: 10px;
+                            margin: 0 -15px;
+                            padding-left: 15px;
+                            padding-right: 15px;
+                            border-left: 3px solid #1a237e;
+                        }
+                        .notification-time {
+                            font-size: 12px;
+                            color: #757575;
+                        }
+                        .view-all {
+                            display: block;
+                            text-align: center;
+                            padding: 10px 0;
+                            margin-top: 10px;
+                            color: #1a237e;
+                            text-decoration: none;
+                        }
+                    `;
+                document.head.appendChild(style);
+                    
+                    // Remove existing dropdown if present
+                    const existingDropdown = document.querySelector('.notifications-dropdown');
+                    if (existingDropdown) {
+                        existingDropdown.remove();
+                    } else {
+                        document.body.appendChild(dropdown);
+                        
+                        // Close dropdown when clicking outside
+                        document.addEventListener('click', function closeDropdown(e) {
+                            if (!dropdown.contains(e.target) && e.target !== notificationIcon) {
+                                dropdown.remove();
+                                document.removeEventListener('click', closeDropdown);
+                            }
+                        });
+                    }
                 });
             }
             
             // Logout functionality
-            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
                 e.preventDefault();
-                localStorage.removeItem('token');
-                localStorage.removeItem('userType');
-                localStorage.removeItem('userFirstName');
-                localStorage.removeItem('userLastName');
-                localStorage.removeItem('userEmail');
-                localStorage.removeItem('userMobileNumber');
-                localStorage.removeItem('userLocation');
+                localStorage.clear();
                 window.location.href = '/';
-            });
-            
-            // Edit Profile Functionality
-            document.getElementById('editProfileBtn').addEventListener('click', (e) => {
-                e.preventDefault();
-                
-                // Create modal for editing profile
-                const modal = document.createElement('div');
-                modal.className = 'edit-profile-modal';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <span class="close-btn">&times;</span>
-                        <h2>Edit Your Profile</h2>
-                        <form id="editProfileForm">
-                            <div class="form-group">
-                                <label for="editPhone">Phone Number</label>
-                                <input type="tel" id="editPhone" name="mobileNumber" value="${userPhone !== 'Not provided' ? userPhone : ''}" pattern="[0-9]{10}" placeholder="Enter 10-digit mobile number">
-                            </div>
-                            <div class="form-group">
-                                <label for="editLocation">Location</label>
-                                <input type="text" id="editLocation" name="location" value="${userLocation !== 'Not specified' ? userLocation : ''}" placeholder="Enter your city, state">
-                                <button type="button" id="detectLocationBtn" class="btn-outline">Detect My Location</button>
-                            </div>
-                            <button type="submit" class="btn">Save Changes</button>
-                        </form>
-                    </div>
-                `;
-                
-                // Add modal styles
-                const style = document.createElement('style');
-                style.textContent = `
-                    .edit-profile-modal {
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        background: rgba(0,0,0,0.7);
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        z-index: 1000;
-                    }
-                    .modal-content {
-                        background: white;
-                        padding: 2rem;
-                        border-radius: 10px;
-                        max-width: 500px;
-                        width: 90%;
-                        position: relative;
-                    }
-                    .close-btn {
-                        position: absolute;
-                        top: 1rem;
-                        right: 1rem;
-                        font-size: 1.5rem;
-                        cursor: pointer;
-                    }
-                    #editProfileForm {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 1.5rem;
-                        margin-top: 1.5rem;
-                    }
-                    #editProfileForm .form-group {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 0.5rem;
-                    }
-                    #editProfileForm input {
-                        padding: 0.8rem;
-                        border: 1px solid #ddd;
-                        border-radius: 5px;
-                    }
-                    #detectLocationBtn {
-                        margin-top: 0.5rem;
-                        align-self: flex-start;
-                    }
-                `;
-                
-                document.head.appendChild(style);
-                document.body.appendChild(modal);
-                
-                // Close modal functionality
-                const closeBtn = modal.querySelector('.close-btn');
-                closeBtn.addEventListener('click', () => {
-                    document.body.removeChild(modal);
-                });
-                
-                // Detect location functionality
-                const detectLocationBtn = document.getElementById('detectLocationBtn');
-                detectLocationBtn.addEventListener('click', () => {
-                    if (navigator.geolocation) {
-                        detectLocationBtn.textContent = 'Detecting...';
-                        navigator.geolocation.getCurrentPosition(
-                            async (position) => {
-                                try {
-                                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
-                                    const data = await response.json();
-                                    
-                                    let location = '';
-                                    if (data.address) {
-                                        const city = data.address.city || data.address.town || data.address.village || '';
-                                        const state = data.address.state || '';
-                                        location = [city, state].filter(Boolean).join(', ');
-                                    }
-                                    
-                                    document.getElementById('editLocation').value = location || 'Location detected';
-                                    detectLocationBtn.textContent = 'Location Detected';
-                                } catch (error) {
-                                    console.error('Error detecting location:', error);
-                                    detectLocationBtn.textContent = 'Detection Failed';
-                                }
-                            },
-                            (error) => {
-                                console.error('Error getting location:', error);
-                                detectLocationBtn.textContent = 'Detection Failed';
-                            }
-                        );
-                    } else {
-                        detectLocationBtn.textContent = 'Not Supported';
-                    }
-                });
-                
-                // Save profile changes
-                const editProfileForm = document.getElementById('editProfileForm');
-                editProfileForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    
-                    const formData = new FormData(editProfileForm);
-                    const mobileNumber = formData.get('mobileNumber');
-                    const location = formData.get('location');
-                    
-                    if (mobileNumber) {
-                        localStorage.setItem('userMobileNumber', mobileNumber);
-                        document.getElementById('clientPhone').textContent = mobileNumber;
-                    }
-                    
-                    if (location) {
-                        localStorage.setItem('userLocation', location);
-                        document.getElementById('clientLocation').textContent = location;
-                    }
-                    
-                    // TODO: In a real application, we would send this data to the server
-                    document.body.removeChild(modal);
-                    
-                    // Show success message
-                    const successMsg = document.createElement('div');
-                    successMsg.className = 'success-message';
-                    successMsg.innerHTML = `
-                        <div class="success-content">
-                            <p>Profile updated successfully!</p>
-                        </div>
-                    `;
-                    successMsg.style.cssText = `
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
-                        background: #2ecc71;
-                        color: white;
-                        padding: 1rem;
-                        border-radius: 5px;
-                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                        z-index: 1000;
-                    `;
-                    
-                    document.body.appendChild(successMsg);
-                    setTimeout(() => {
-                        document.body.removeChild(successMsg);
-                    }, 3000);
-                });
             });
         });
     </script>

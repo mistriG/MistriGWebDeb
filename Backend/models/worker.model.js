@@ -19,6 +19,14 @@ const workerSchema = new mongoose.Schema({
         required: true,
         unique: true,
         minlength: [5, 'Email Must be at least 5 characters'],
+        lowercase: true,
+        trim: true,
+        validate: {
+            validator: function(v) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+            },
+            message: props => `${props.value} is not a valid email address!`
+        }
     },
     password: {
         type: String,

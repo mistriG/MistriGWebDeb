@@ -215,6 +215,105 @@
         </div>
     </div>
 
-    <script type="module" src="/src/main.js"></script>
+    <script>
+        // API Configuration
+        const API_URL = 'http://localhost:3002/api';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('workerLoginForm');
+            if (loginForm) {
+                // Create error display element
+                const errorDisplay = document.createElement('div');
+                errorDisplay.className = 'error-message';
+                errorDisplay.style.color = '#e74c3c';
+                errorDisplay.style.marginBottom = '1rem';
+                errorDisplay.style.display = 'none';
+                loginForm.insertBefore(errorDisplay, loginForm.firstChild);
+                
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    errorDisplay.style.display = 'none';
+                    
+                    try {
+                        const email = document.getElementById('email').value;
+                        const password = document.getElementById('password').value;
+                        
+                        // Basic validation
+                        if (!email || !password) {
+                            throw new Error('Please enter both email and password');
+                        }
+                        
+                        // Clear any existing tokens or user data
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('workerToken');
+                        localStorage.removeItem('userType');
+                        localStorage.removeItem('userFirstName');
+                        localStorage.removeItem('userEmail');
+                        localStorage.removeItem('userMobileNumber');
+                        
+                        // Call API to login worker
+                        console.log('Attempting worker login with:', email);
+                        const response = await fetch(`${API_URL}/workers/login`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ email, password })
+                        });
+                        
+                        const data = await response.json();
+                        console.log('Login response:', data);
+                        
+                        if (response.ok) {
+                            // Set worker token and user type
+                            localStorage.setItem('workerToken', data.token);
+                            localStorage.setItem('userType', 'worker');
+                            
+                            // Save worker info for UI display
+                            if (data.worker && data.worker.fullname && data.worker.fullname.firstname) {
+                                localStorage.setItem('userFirstName', data.worker.fullname.firstname);
+                                console.log('Saved worker firstname:', data.worker.fullname.firstname);
+                            }
+                            if (data.worker && data.worker.email) {
+                                localStorage.setItem('userEmail', data.worker.email);
+                                console.log('Saved worker email:', data.worker.email);
+                            }
+                            if (data.worker && data.worker.phoneNumber) {
+                                localStorage.setItem('userMobileNumber', data.worker.phoneNumber);
+                                console.log('Saved worker phone:', data.worker.phoneNumber);
+                            }
+                            
+                            console.log('Worker logged in successfully:', data.worker ? data.worker.fullname : email);
+                            console.log('LocalStorage after login:');
+                            for (let i = 0; i < localStorage.length; i++) {
+                                const key = localStorage.key(i);
+                                console.log(`${key}: ${localStorage.getItem(key)}`);
+                            }
+                            
+                            // Redirect to worker dashboard
+                            console.log('Redirecting to dashboard');
+                            window.location.href = '/worker-dashboard.html';
+                        } else {
+                            throw new Error(data.message || 'Login failed');
+                        }
+                    } catch (error) {
+                        console.error('Worker login error:', error);
+                        errorDisplay.textContent = error.message || 'Login failed. Please try again.';
+                        errorDisplay.style.display = 'block';
+                    }
+                });
+            }
+            
+            // Mobile menu toggle
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const navLinks = document.querySelector('.nav-links');
+            
+            if (mobileMenuBtn && navLinks) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    navLinks.classList.toggle('active');
+                });
+            }
+        });
+    </script>
 </body>
 </html> 

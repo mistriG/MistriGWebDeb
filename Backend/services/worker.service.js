@@ -2,19 +2,29 @@ import workerModel from '../models/worker.model.js';
 
 export const createWorker = async (workerData) => {
     try {
-        // Check if worker already exists
-        const existingWorker = await workerModel.findOne({ email: workerData.email });
+        // Log incoming email
+        console.log('Attempting to create worker with email:', workerData.email);
+        
+        // Convert email to lowercase for consistent comparison
+        const email = workerData.email.toLowerCase();
+        
+        // Check if worker already exists with case-insensitive email
+        const existingWorker = await workerModel.findOne({ 
+            email: { $regex: new RegExp(`^${email}$`, 'i') }
+        });
+        
         if (existingWorker) {
+            console.log('Worker already exists with email:', existingWorker.email);
             throw new Error('Worker with this email already exists');
         }
 
-        // Create new worker
+        // Create new worker with lowercase email
         const worker = new workerModel({
             fullname: {
                 firstname: workerData.firstname,
                 lastname: workerData.lastname
             },
-            email: workerData.email,
+            email: email, // Store email in lowercase
             password: workerData.password,
             phoneNumber: workerData.phoneNumber,
             profession: workerData.profession,
@@ -25,10 +35,12 @@ export const createWorker = async (workerData) => {
 
         // Save worker
         await worker.save();
+        console.log('Successfully created new worker with email:', email);
         
         // Return worker without password
         return worker;
     } catch (error) {
+        console.error('Error in createWorker:', error);
         throw error;
     }
 };

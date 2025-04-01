@@ -221,7 +221,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="index.html" id="logoutBtn">
+                    <a href="#" id="logoutBtn">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                         Logout
                     </a>
@@ -417,9 +417,12 @@
         </div>
     </div>
 
-    <script src="src/main.js"></script>
+    <script src="src/main.js" type="module"></script>
     <script src="src/api-service.js"></script>
-    <script>
+    <script type="module">
+        // Import logout function from main.js
+        import { logout } from '/src/main.js';
+        
         // Immediately set toggle state based on localStorage (before any events fire)
         (function() {
             const statusToggle = document.getElementById('statusToggle');
@@ -471,7 +474,96 @@
             // Form submission handling
             document.getElementById('account-form').addEventListener('submit', function(e) {
                 e.preventDefault();
-                alert('Account settings would be saved here!');
+                
+                // Get form data
+                const fullname = document.getElementById('name').value;
+                const email = document.getElementById('email').value;
+                const phone = document.getElementById('phone').value;
+                const location = document.getElementById('location').value;
+                const profession = document.getElementById('skill').value;
+                const experience = document.getElementById('experience').value;
+                const bio = document.getElementById('bio').value;
+                
+                // Check if hourly-rate element exists
+                const hourlyRateElement = document.getElementById('hourly-rate');
+                
+                // Create worker data object
+                const workerData = {
+                    fullname: {
+                        firstname: fullname.split(' ')[0] || '',
+                        lastname: fullname.split(' ').slice(1).join(' ') || ''
+                    },
+                    email: email,
+                    phoneNumber: phone,
+                    location: location,
+                    profession: profession,
+                    experience: Number(experience),
+                    bio: bio
+                };
+                
+                // Add hourly rate if the element exists
+                if (hourlyRateElement) {
+                    workerData.hourlyRate = Number(hourlyRateElement.value);
+                }
+                
+                // Get token from localStorage
+                const token = localStorage.getItem('workerToken');
+                if (!token) {
+                    alert('Authentication error! Please login again.');
+                    return;
+                }
+                
+                // Show loading indicator
+                const saveBtn = this.querySelector('.btn-save');
+                const originalBtnText = saveBtn.textContent;
+                saveBtn.textContent = 'Saving...';
+                saveBtn.disabled = true;
+                
+                // Update profile using API
+                fetch('http://localhost:3002/api/workers/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(workerData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to update profile');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Update localStorage with new user data
+                    if (workerData.fullname.firstname) {
+                        localStorage.setItem('userFirstName', workerData.fullname.firstname);
+                    }
+                    if (email) {
+                        localStorage.setItem('userEmail', email);
+                    }
+                    if (phone) {
+                        localStorage.setItem('userMobileNumber', phone);
+                    }
+                    
+                    // Update displayed user name in the header if it exists
+                    const userProfileDisplay = document.querySelector('#userProfileBtn span');
+                    if (userProfileDisplay) {
+                        userProfileDisplay.textContent = fullname;
+                    }
+                    
+                    // Show success message
+                    alert('Profile updated successfully!');
+                })
+                .catch(error => {
+                    console.error('Error updating profile:', error);
+                    alert('Failed to update profile. Please try again.');
+                })
+                .finally(() => {
+                    // Reset button state
+                    saveBtn.textContent = originalBtnText;
+                    saveBtn.disabled = false;
+                });
             });
             
             // Status toggle functionality (reusing from dashboard)
@@ -509,15 +601,7 @@
                     e.preventDefault();
                     
                     if (confirm('Are you sure you want to logout?')) {
-                        // Clear local storage
-                        localStorage.removeItem('workerToken');
-                        localStorage.removeItem('userType');
-                        localStorage.removeItem('userFirstName');
-                        localStorage.removeItem('workerStatus');
-                        localStorage.removeItem('locationWatchId');
-                        
-                        // Redirect to homepage
-                        window.location.href = '/';
+                        logout();
                     }
                 });
             }

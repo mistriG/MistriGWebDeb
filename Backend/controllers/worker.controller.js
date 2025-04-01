@@ -4,12 +4,26 @@ import { validationResult } from 'express-validator';
 
 export const registerWorker = async (req, res, next) => {
     try {
+        console.log('Received worker registration request:', {
+            email: req.body.email,
+            fullname: req.body.fullname
+        });
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            console.log('Validation errors:', errors.array());
             return res.status(400).json({ errors: errors.array() });
         }
 
         const { fullname, email, password, phoneNumber, profession, experience, location, bio } = req.body;
+
+        // Log the incoming data
+        console.log('Processing registration for:', {
+            email,
+            fullname,
+            profession,
+            location
+        });
 
         const hashPassword = await workerModel.hashPassword(password);
 
@@ -26,13 +40,33 @@ export const registerWorker = async (req, res, next) => {
         });
 
         const token = worker.generateAuthToken();
+        console.log('Successfully registered worker:', {
+            id: worker._id,
+            email: worker.email
+        });
+        
         res.status(201).json({ token, worker });
     } catch (error) {
+        console.error('Error in registerWorker:', error);
+        
         if (error.message === 'Worker with this email already exists') {
-            return res.status(400).json({ message: error.message });
+            return res.status(400).json({ 
+                message: error.message,
+                details: 'Please try logging in or use a different email address'
+            });
         }
-        console.error('Error registering worker:', error);
-        res.status(500).json({ message: 'Server error' });
+        
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ 
+                message: 'Validation Error',
+                errors: Object.values(error.errors).map(err => err.message)
+            });
+        }
+        
+        res.status(500).json({ 
+            message: 'Server error during registration',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 };
 
