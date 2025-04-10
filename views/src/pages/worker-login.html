@@ -248,57 +248,94 @@
                         localStorage.removeItem('workerToken');
                         localStorage.removeItem('userType');
                         localStorage.removeItem('userFirstName');
+                        localStorage.removeItem('userLastName');
                         localStorage.removeItem('userEmail');
                         localStorage.removeItem('userMobileNumber');
+                        localStorage.removeItem('profession');
+                        localStorage.removeItem('experience');
+                        localStorage.removeItem('hourlyRate');
+                        localStorage.removeItem('location');
+                        localStorage.removeItem('userLocation');
+                        localStorage.removeItem('workerStatus');
+
+                        console.log('Attempting to login with email:', email);
                         
-                        // Call API to login worker
-                        console.log('Attempting worker login with:', email);
+                        // Make API call to backend for authentication
                         const response = await fetch(`${API_URL}/workers/login`, {
                             method: 'POST',
                             headers: {
-                                'Content-Type': 'application/json',
+                                'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({ email, password })
+                            body: JSON.stringify({ email, password }),
+                            credentials: 'include'
                         });
                         
                         const data = await response.json();
                         console.log('Login response:', data);
                         
-                        if (response.ok) {
-                            // Set worker token and user type
-                            localStorage.setItem('workerToken', data.token);
-                            localStorage.setItem('userType', 'worker');
-                            
-                            // Save worker info for UI display
-                            if (data.worker && data.worker.fullname && data.worker.fullname.firstname) {
-                                localStorage.setItem('userFirstName', data.worker.fullname.firstname);
-                                console.log('Saved worker firstname:', data.worker.fullname.firstname);
-                            }
-                            if (data.worker && data.worker.email) {
-                                localStorage.setItem('userEmail', data.worker.email);
-                                console.log('Saved worker email:', data.worker.email);
-                            }
-                            if (data.worker && data.worker.phoneNumber) {
-                                localStorage.setItem('userMobileNumber', data.worker.phoneNumber);
-                                console.log('Saved worker phone:', data.worker.phoneNumber);
-                            }
-                            
-                            console.log('Worker logged in successfully:', data.worker ? data.worker.fullname : email);
-                            console.log('LocalStorage after login:');
-                            for (let i = 0; i < localStorage.length; i++) {
-                                const key = localStorage.key(i);
-                                console.log(`${key}: ${localStorage.getItem(key)}`);
-                            }
-                            
-                            // Redirect to worker dashboard
-                            console.log('Redirecting to dashboard');
-                            window.location.href = '/worker-dashboard.html';
-                        } else {
-                            throw new Error(data.message || 'Login failed');
+                        if (!response.ok) {
+                            throw new Error(data.message || 'Login failed. Please check your credentials.');
                         }
+                        
+                        console.log('Login successful:', data);
+                        
+                        // Store authentication data
+                        localStorage.setItem('workerToken', data.token);
+                        localStorage.setItem('userType', 'worker');
+                        
+                        // Store user info if available
+                        if (data.worker) {
+                            if (data.worker.fullname) {
+                                if (data.worker.fullname.firstname) {
+                                    localStorage.setItem('userFirstName', data.worker.fullname.firstname);
+                                }
+                                if (data.worker.fullname.lastname) {
+                                    localStorage.setItem('userLastName', data.worker.fullname.lastname);
+                                }
+                            }
+                            if (data.worker.email) {
+                                localStorage.setItem('userEmail', data.worker.email);
+                            }
+                            if (data.worker.phoneNumber) {
+                                localStorage.setItem('userMobileNumber', data.worker.phoneNumber);
+                            }
+                            if (data.worker.location) {
+                                localStorage.setItem('location', data.worker.location);
+                                localStorage.setItem('userLocation', data.worker.location);
+                            }
+                            if (data.worker.profession) {
+                                localStorage.setItem('profession', data.worker.profession);
+                            }
+                            if (data.worker.experience) {
+                                localStorage.setItem('experience', data.worker.experience.toString());
+                            }
+                            if (data.worker.hourlyRate) {
+                                localStorage.setItem('hourlyRate', data.worker.hourlyRate.toString());
+                            }
+                            if (data.worker.profileImage) {
+                                localStorage.setItem('userProfileImage', data.worker.profileImage);
+                            } else {
+                                // Default profile image if none provided
+                                localStorage.setItem('userProfileImage', 'https://randomuser.me/api/portraits/men/32.jpg');
+                            }
+                            
+                            // Set default worker status to offline
+                            localStorage.setItem('workerStatus', 'offline');
+                        }
+                        
+                        // Log all localStorage for debugging
+                        console.log('localStorage contents after login:');
+                        for (let i = 0; i < localStorage.length; i++) {
+                            const key = localStorage.key(i);
+                            console.log(`${key}: ${localStorage.getItem(key)}`);
+                        }
+                        
+                        // Redirect to dashboard
+                        window.location.href = 'worker-dashboard.html';
+                        
                     } catch (error) {
-                        console.error('Worker login error:', error);
-                        errorDisplay.textContent = error.message || 'Login failed. Please try again.';
+                        console.error('Login error:', error);
+                        errorDisplay.textContent = error.message;
                         errorDisplay.style.display = 'block';
                     }
                 });

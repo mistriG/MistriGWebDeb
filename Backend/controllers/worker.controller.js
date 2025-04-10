@@ -129,13 +129,38 @@ export const updateWorkerProfile = async (req, res, next) => {
             if (typeof updates.fullname !== 'object') {
                 return res.status(400).json({ message: 'Invalid fullname format' });
             }
+            
+            // Validate lastname length
+            if (updates.fullname.lastname && updates.fullname.lastname.length < 3) {
+                return res.status(400).json({ message: 'Last name must be at least 3 characters long' });
+            }
         }
 
-        const updatedWorker = await workerService.updateWorker(req.worker._id, updates);
-        
-        res.status(200).json(updatedWorker);
+        try {
+            const updatedWorker = await workerService.updateWorker(req.worker._id, updates);
+            res.status(200).json(updatedWorker);
+        } catch (error) {
+            console.error('Error updating worker profile:', error);
+            
+            // Check for validation errors from Mongoose
+            if (error.name === 'ValidationError') {
+                const validationErrors = {};
+                
+                // Extract validation error messages
+                Object.keys(error.errors).forEach(key => {
+                    validationErrors[key] = error.errors[key].message;
+                });
+                
+                return res.status(400).json({
+                    message: 'Validation failed: ' + Object.values(validationErrors).join(', '),
+                    errors: validationErrors
+                });
+            }
+            
+            res.status(500).json({ message: 'Failed to update profile. Please try again.' });
+        }
     } catch (error) {
-        console.error('Error updating worker profile:', error);
+        console.error('Error in updateWorkerProfile controller:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };

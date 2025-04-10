@@ -127,7 +127,7 @@
             </div>
             <ul class="nav-menu">
                 <li>
-                    <a href="worker-dashboard.html">
+                    <a href="/src/pages/worker-dashboard.html">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                         Dashboard
                     </a>
@@ -135,7 +135,7 @@
                 <li>
                     <a href="worker-orders.html">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                        Orders
+                        Working Calls
                     </a>
                 </li>
                 <li>
@@ -184,8 +184,8 @@
                         <span class="badge">3</span>
                     </div>
                     <div class="user-profile" id="userProfileBtn">
-                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Profile">
-                        <span>Rahul Sharma</span>
+                        <img id="userProfileImage" src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Profile">
+                        <span id="userProfileName">Loading...</span>
                     </div>
                 </div>
             </div>
@@ -193,9 +193,9 @@
             <!-- Profile Container -->
             <div class="profile-container">
                 <div class="profile-header">
-                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Rahul Sharma" class="profile-image">
+                    <img id="workerProfileImage" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Worker Profile" class="profile-image">
                     <div class="profile-info">
-                        <h2>Rahul Sharma</h2>
+                        <h2 id="workerProfileFullName">Loading...</h2>
                         <div class="profile-status">Verified Professional</div>
                         <div class="rating-stars">★★★★★ 4.8/5 (32 reviews)</div>
                     </div>
@@ -206,11 +206,11 @@
                         <h3>Personal Information</h3>
                         <div class="detail-field">
                             <label>Full Name</label>
-                            <div class="value">Rahul Sharma</div>
+                            <div id="workerFullName" class="value">Loading...</div>
                         </div>
                         <div class="detail-field">
                             <label>Email</label>
-                            <div class="value">rahul.sharma@example.com</div>
+                            <div id="workerEmail" class="value">Loading...</div>
                         </div>
                         <div class="detail-field">
                             <label>Phone</label>
@@ -218,7 +218,7 @@
                         </div>
                         <div class="detail-field">
                             <label>Location</label>
-                            <div class="value">Dwarka, New Delhi</div>
+                            <div id="workerLocation" class="value">Loading...</div>
                         </div>
                         <div class="detail-field">
                             <label>Member Since</label>
@@ -230,7 +230,7 @@
                         <h3>Professional Information</h3>
                         <div class="detail-field">
                             <label>Skill</label>
-                            <div class="value">Plumber</div>
+                            <div id="workerProfession" class="value">Loading...</div>
                         </div>
                         <div class="detail-field">
                             <label>Experience</label>
@@ -309,6 +309,60 @@
                     }
                 }
             }
+
+            // Load worker information from localStorage
+            const userFirstName = localStorage.getItem('userFirstName') || '';
+            const userLastName = localStorage.getItem('userLastName') || '';
+            const userEmail = localStorage.getItem('userEmail') || '';
+            const userLocation = localStorage.getItem('userLocation') || '';
+            const userProfession = localStorage.getItem('userProfession') || '';
+            const userFullName = userFirstName + (userLastName ? ' ' + userLastName : '');
+            
+            // Update profile name in header
+            const userProfileName = document.getElementById('userProfileName');
+            if (userProfileName) {
+                userProfileName.textContent = userFullName || 'Worker';
+            }
+            
+            // Update profile image if available
+            const userProfileImage = localStorage.getItem('userProfileImage');
+            const headerProfileImageEl = document.getElementById('userProfileImage');
+            const profileImageEl = document.getElementById('workerProfileImage');
+            
+            if (headerProfileImageEl && userProfileImage) {
+                headerProfileImageEl.src = userProfileImage;
+            }
+            
+            if (profileImageEl && userProfileImage) {
+                profileImageEl.src = userProfileImage;
+            }
+            
+            // Update all worker information in the profile
+            const workerProfileFullName = document.getElementById('workerProfileFullName');
+            const workerFullName = document.getElementById('workerFullName');
+            const workerEmail = document.getElementById('workerEmail');
+            const workerLocation = document.getElementById('workerLocation');
+            const workerProfession = document.getElementById('workerProfession');
+            
+            if (workerProfileFullName) {
+                workerProfileFullName.textContent = userFullName || 'Worker';
+            }
+            
+            if (workerFullName) {
+                workerFullName.textContent = userFullName || 'Not Available';
+            }
+            
+            if (workerEmail) {
+                workerEmail.textContent = userEmail || 'Not Available';
+            }
+            
+            if (workerLocation) {
+                workerLocation.textContent = userLocation || 'Not Available';
+            }
+            
+            if (workerProfession) {
+                workerProfession.textContent = userProfession || 'Not Available';
+            }
         })();
         
         document.addEventListener('DOMContentLoaded', function() {
@@ -353,6 +407,11 @@
                         localStorage.removeItem('workerToken');
                         localStorage.removeItem('userType');
                         localStorage.removeItem('userFirstName');
+                        localStorage.removeItem('userLastName');
+                        localStorage.removeItem('userEmail');
+                        localStorage.removeItem('userProfileImage');
+                        localStorage.removeItem('userLocation');
+                        localStorage.removeItem('userProfession');
                         localStorage.removeItem('workerStatus');
                         localStorage.removeItem('locationWatchId');
                         

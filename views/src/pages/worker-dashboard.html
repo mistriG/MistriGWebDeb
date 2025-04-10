@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Dashboard - MistriG</title>
+    <!-- Include Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../worker-dashboard.css">
+    <!-- Leaflet CSS for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <!-- Emergency Storage Cleanup -->
+    <script>
+        // Storage cleanup
+        window.addEventListener('DOMContentLoaded', function() {
+            // Clean up localStorage
+            try {
+                // Remove temporary profile image
+                localStorage.removeItem('tempProfileImage');
+                
+                // Check for other large items
+                let totalSize = 0;
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    const size = (value ? value.length : 0) * 2; // Approximate size in bytes
+                    totalSize += size;
+                    
+                    if (size > 100000) { // Items larger than ~100KB
+                        console.warn(`Large localStorage item found: ${key} (${(size/1024).toFixed(2)}KB)`);
+                    }
+                }
+                console.log(`Total localStorage usage: ${(totalSize/1024).toFixed(2)}KB`);
+            } catch (error) {
+                console.error('Error during storage cleanup:', error);
+            }
+        });
+    </script>
+    <!-- End Emergency Storage Cleanup -->
+    <style>
+        /* Dashboard specific styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: #1a237e;
+            color: white;
+            padding: 25px 0;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .logo-container {
+            padding: 0 20px 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-container img {
+            width: 40px;
+            margin-right: 10px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .nav-menu li {
+            padding: 0;
+        }
+        
+        .nav-menu a {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .nav-menu a:hover, .nav-menu a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .nav-menu a svg {
+            margin-right: 15px;
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .status-toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .status-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+        
+        .user-controls {
+            display: flex;
+            align-items: center;
+        }
+        
+        .notification-icon {
+            margin-right: 20px;
+            position: relative;
+        }
+        
+        .notification-icon .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #f44336;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .user-profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .achievement-card {
+            background: linear-gradient(135deg, #FFC107, #FF9800);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .achievement-icon {
+            background: rgba(255,255,255,0.2);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+        }
+        
+        .achievement-content h3 {
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        
+        .achievement-content p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .map-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        #map {
+            height: 300px;
+            border-radius: 10px;
+        }
+        
+        .job-requests {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .job-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .job-card:last-child {
+            margin-bottom: 0;
+        }
+        
+        .job-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        
+        .btn-accept {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .btn-reject {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3498db;
+            width: 16px;
+            height: 16px;
+            animation: spin 2s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+            vertical-align: middle;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-text {
+            margin-left: 15px;
+            font-weight: 500;
+        }
+        
+        .offline {
+            color: #757575;
+        }
+        
+        .online {
+            color: #4CAF50;
+            display: none;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 10px 0;
+            }
+            
+            .logo-container {
+                padding: 0 10px 10px;
+            }
+            
+            .main-content {
+                padding: 10px;
+            }
+        }
+
+        /* Worker info styles */
+        .info-card {
+            margin-bottom: 20px;
+        }
+
+        .worker-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 500;
+            color: #1a237e;
+        }
+
+        .profile-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #1a237e;
+            text-decoration: none;
+            padding: 5px 10px;
+            background: #e8eaf6;
+            border-radius: 5px;
+        }
+
+        .profile-link:hover {
+            background: #c5cae9;
+        }
+
+        .job-request-section {
+        }
+    </style>
+    
+    <!-- Immediate worker data loader - executes before DOM is ready -->
+    <script>
+        // Load worker data as early as possible
+        (function() {
+            // Get worker data from localStorage
+            const userFirstName = localStorage.getItem('userFirstName') || '';
+            const userLastName = localStorage.getItem('userLastName') || '';
+            const userFullName = userFirstName + (userLastName ? ` ${userLastName}` : '');
+            
+            console.log('Early load - Worker name:', userFullName);
+            
+            // Setup a function to update the UI as soon as elements are available
+            function updateUIWhenAvailable() {
+                // Check if elements exist yet
+                const profileNameElement = document.getElementById('userProfileName');
+                const nameElement = document.getElementById('userName');
+                const profileImageElement = document.getElementById('userProfileImage');
+                
+                if (profileNameElement) {
+                    profileNameElement.textContent = userFullName || 'Worker';
+                }
+                
+                if (nameElement) {
+                    nameElement.textContent = userFirstName || 'Worker';
+                }
+                
+                // Update profile image if available
+                if (profileImageElement) {
+                    const userProfileImage = localStorage.getItem('userProfileImage');
+                    if (userProfileImage) {
+                        profileImageElement.src = userProfileImage;
+                    }
+                }
+                
+                // If elements don't exist yet, try again soon
+                if (!profileNameElement || !nameElement || !profileImageElement) {
+                    setTimeout(updateUIWhenAvailable, 50);
+                }
+            }
+            
+            // Start trying to update UI right away
+            updateUIWhenAvailable();
+        })();
+    </script>
+</head>
+<body>
+    <!-- Debugging info -->
+    <div id="debug-info" style="background: #f0f0f0; padding: 10px; margin: 10px; border: 1px solid #ccc; display: none;">
+        <h3>Debug Information</h3>
+        <pre id="debug-content"></pre>
+        <button onclick="document.getElementById('debug-info').style.display='none'">Hide</button>
+                    </div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo-container">
+                <img src="../Images/mg.png" alt="MistriG">
+                <h2>MistriG</h2>
+            </div>
+            <ul class="nav-menu">
+                <li>
+                    <a href="worker-dashboard.html" class="active">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="../../../worker-orders.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        Working Calls
+                    </a>
+                </li>
+                <li>
+                    <a href="../../../worker-earnings.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        Earnings
+                    </a>
+                </li>
+                <li>
+                    <a href="../../../worker-profile.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Profile
+                    </a>
+                </li>
+                <li>
+                    <a href="../../../worker-settings.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="logoutLink" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Dashboard Content -->
+        <div class="main-content">
+            <!-- Top Header with Status Toggle and User Info -->
+            <div class="top-header">
+                <div class="worker-status">
+                    <label class="status-toggle">
+                        <input type="checkbox" id="statusToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="status-text offline" id="offlineStatus">Offline</span>
+                    <span class="status-text online" id="onlineStatus">Online</span>
+                    <span class="loader" id="statusLoader"></span>
+                    </div>
+                <div class="user-controls">
+                    <div class="notification-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="user-profile" id="userProfileBtn">
+                        <img id="userProfileImage" src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Profile">
+                        <span id="userProfileName">Worker</span>
+                </div>
+            </div>
+        </div>
+
+            <!-- Welcome Section -->
+            <div class="stat-card welcome-card">
+                <h2>Welcome back, <span id="userName">Worker</span>!</h2>
+                <p>Here's your overview for today</p>
+            </div>
+
+            <!-- Worker Information Section -->
+            <div class="stat-card info-card">
+                <h3>Your Profile Information</h3>
+                <div class="worker-info">
+                    <div class="info-item">
+                        <span class="info-label">Profession:</span>
+                        <span class="info-value" id="userProfession">Professional</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Location:</span>
+                        <span class="info-value" id="userLocation">Your Location</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Experience:</span>
+                        <span class="info-value" id="userExperience">Not Set</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Hourly Rate:</span>
+                        <span class="info-value" id="userHourlyRate">Not Set</span>
+                    </div>
+                </div>
+                <a href="../../../worker-profile.html" class="profile-link">Edit Profile</a>
+        </div>
+
+            <!-- Performance Stats -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <h3>Job Completion Rate</h3>
+                    <h2>97%</h2>
+                    <p>Last 30 days</p>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                </div>
+                <div class="stat-card">
+                    <h3>Earnings Growth</h3>
+                    <h2>+28%</h2>
+                    <p>vs. previous month</p>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+            </div>
+        </div>
+
+            <!-- Achievement Card -->
+            <div class="achievement-card">
+                <div class="achievement-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                </div>
+                <div class="achievement-content">
+                    <h3>Gold Partner</h3>
+                    <p>Congratulations! You've achieved Gold Partner status with 50+ completed jobs.</p>
+            </div>
+        </div>
+
+            <!-- Map Container -->
+            <div class="map-container">
+                <h3>Your Location</h3>
+                <div id="map"></div>
+            </div>
+            
+            <!-- Job Requests -->
+            <div class="job-requests">
+                <h3>Recent Job Requests</h3>
+                <div class="job-card" data-job-id="job123">
+                    <h4>Plumbing Repair</h4>
+                    <p><strong>Customer:</strong> Amit Patel</p>
+                    <p><strong>Location:</strong> Dwarka Sector 12, New Delhi</p>
+                    <p><strong>Price:</strong> ₹1,200</p>
+                    <div class="job-actions">
+                        <button class="btn-accept">Accept</button>
+                        <button class="btn-reject">Reject</button>
+                    </div>
+                </div>
+                <div class="job-card" data-job-id="job124">
+                    <h4>Pipe Fitting</h4>
+                    <p><strong>Customer:</strong> Priya Sharma</p>
+                    <p><strong>Location:</strong> Vasant Kunj, New Delhi</p>
+                    <p><strong>Price:</strong> ₹1,500</p>
+                    <div class="job-actions">
+                        <button class="btn-accept">Accept</button>
+                        <button class="btn-reject">Reject</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+     
+    <!-- Load shared functions -->
+    <script src="../main.js"></script>
+     
+    <!-- Main Script -->
+    <script type="module">
+        // API Configuration
+        const API_URL = 'http://localhost:3002/api';
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('workerToken');
+            localStorage.removeItem('userType');
+            localStorage.removeItem('userFirstName');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userId');
+            window.location.href = 'worker-login.html';
+        }
+        
+        // Function to show debug information
+        function showDebugInfo() {
+            const debugDiv = document.createElement('div');
+            debugDiv.style.position = 'fixed';
+            debugDiv.style.top = '50%';
+            debugDiv.style.left = '50%';
+            debugDiv.style.transform = 'translate(-50%, -50%)';
+            debugDiv.style.padding = '20px';
+            debugDiv.style.backgroundColor = 'white';
+            debugDiv.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
+            debugDiv.style.zIndex = '9999';
+            debugDiv.style.maxWidth = '80%';
+            debugDiv.style.maxHeight = '80%';
+            debugDiv.style.overflow = 'auto';
+            debugDiv.style.borderRadius = '5px';
+            
+            let html = '<h3>Worker Information (localStorage)</h3>';
+            html += '<table style="border-collapse: collapse; width: 100%;">';
+            html += '<tr><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Key</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Value</th></tr>';
+            
+            // List of keys to check, in order
+            const keys = [
+                'workerToken', 
+                'userType', 
+                'userFirstName', 
+                'userLastName', 
+                'userEmail', 
+                'userMobileNumber', 
+                'profession', 
+                'location', 
+                'userLocation', 
+                'experience', 
+                'hourlyRate', 
+                'workerStatus'
+            ];
+            
+            // Add each item to the table
+            keys.forEach(key => {
+                const value = localStorage.getItem(key) || '(not set)';
+                html += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${key}</td><td style="border: 1px solid #ddd; padding: 8px;">${value}</td></tr>`;
+            });
+            
+            // Add option to display other items
+            html += '</table>';
+            html += '<h3>All localStorage Items</h3>';
+            html += '<table style="border-collapse: collapse; width: 100%;">';
+            html += '<tr><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Key</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Value</th></tr>';
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!keys.includes(key)) {
+                    const value = localStorage.getItem(key);
+                    html += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${key}</td><td style="border: 1px solid #ddd; padding: 8px;">${value}</td></tr>`;
+                }
+            }
+            
+            html += '</table>';
+            html += '<button id="closeDebug" style="margin-top: 15px; padding: 8px 15px; background: #1a237e; color: white; border: none; border-radius: 5px; cursor: pointer;">Close</button>';
+            
+            debugDiv.innerHTML = html;
+            document.body.appendChild(debugDiv);
+            
+            document.getElementById('closeDebug').addEventListener('click', function() {
+                document.body.removeChild(debugDiv);
+            });
+        }
+        
+        // Map initialization 
+        function initMap() {
+            if (!document.getElementById('map')) return;
+            
+            // Create map centered on worker's location or default location
+            const map = L.map('map').setView([28.6139, 77.2090], 13); // Default to Delhi
+            
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // Add marker for worker location
+            L.marker([28.6139, 77.2090]).addTo(map)
+                .bindPopup('Your current location')
+                .openPopup();
+        }
+        
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Add debug button
+            const debugBtn = document.createElement('button');
+            debugBtn.textContent = 'Debug Info';
+            debugBtn.style.position = 'fixed';
+            debugBtn.style.bottom = '10px';
+            debugBtn.style.right = '10px';
+            debugBtn.style.zIndex = '1000';
+            debugBtn.style.padding = '10px';
+            debugBtn.style.backgroundColor = '#007bff';
+            debugBtn.style.color = 'white';
+            debugBtn.style.border = 'none';
+            debugBtn.style.borderRadius = '5px';
+            debugBtn.onclick = function() {
+                showDebugInfo();
+            };
+            document.body.appendChild(debugBtn);
+            
+            // Get authentication tokens
+            const workerToken = localStorage.getItem('workerToken');
+            const userType = localStorage.getItem('userType');
+            
+            console.log('Authentication check:', { workerToken: workerToken ? 'exists' : 'missing', userType });
+            
+            // Check authentication
+            if (!workerToken || userType !== 'worker') {
+                console.error('Worker not authenticated, redirecting to login');
+                // Show debug info before redirecting
+                showDebugInfo();
+                // Add a small delay to let user see debug info
+                setTimeout(() => {
+                    window.location.href = 'worker-login.html';
+                }, 3000);
+                return;
+            }
+            
+            console.log('Authentication successful, loading worker dashboard');
+            
+            // Call the imported loadWorkerInfo function if it exists
+            if (typeof loadWorkerInfo === 'function') {
+                loadWorkerInfo();
+            } else {
+                console.error('loadWorkerInfo function not found');
+                // Fallback to manual loading
+                manuallyLoadWorkerInfo();
+            }
+            
+            // Always run our direct DOM updates to ensure all elements are updated
+            updateAllUserElements();
+            
+            // Schedule another update after a small delay to catch any elements that might load late
+            setTimeout(updateAllUserElements, 1000);
+            
+            try {
+                // Initialize map
+                initMap();
+                
+                // Add logout handler
+                const logoutBtn = document.getElementById('logoutLink');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    logout();
+                });
+            }
+
+                // Initialize status toggle
+            const statusToggle = document.getElementById('statusToggle');
+            const offlineStatus = document.getElementById('offlineStatus');
+            const onlineStatus = document.getElementById('onlineStatus');
+            
+            if (statusToggle) {
+                    // Always get the latest status from localStorage
+                const savedStatus = localStorage.getItem('workerStatus');
+                if (savedStatus === 'online') {
+                    statusToggle.checked = true;
+                    offlineStatus.style.display = 'none';
+                    onlineStatus.style.display = 'inline-block';
+                } else {
+                    statusToggle.checked = false;
+                    onlineStatus.style.display = 'none';
+                    offlineStatus.style.display = 'inline-block';
+                    if (!savedStatus) {
+                        localStorage.setItem('workerStatus', 'offline');
+                    }
+                }
+                    
+                    // Add toggle event listener
+                    statusToggle.addEventListener('change', function() {
+                        const newStatus = this.checked ? 'online' : 'offline';
+                        localStorage.setItem('workerStatus', newStatus);
+                        
+                        if (newStatus === 'online') {
+                            offlineStatus.style.display = 'none';
+                            onlineStatus.style.display = 'inline-block';
+                        } else {
+                            onlineStatus.style.display = 'none';
+                            offlineStatus.style.display = 'inline-block';
+                        }
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+            }
+        });
+        
+        // Function to update all user-related elements in the DOM
+        function updateAllUserElements() {
+            const userFirstName = localStorage.getItem('userFirstName') || '';
+            const userLastName = localStorage.getItem('userLastName') || '';
+            const userFullName = userFirstName + (userLastName ? ` ${userLastName}` : '');
+            const userProfileImage = localStorage.getItem('userProfileImage');
+            
+            console.log('Updating all user elements with:', {
+                firstName: userFirstName,
+                lastName: userLastName,
+                fullName: userFullName,
+                hasProfileImage: !!userProfileImage
+            });
+            
+            // Update all elements with ID userName
+            document.querySelectorAll('#userName').forEach(el => {
+                el.textContent = userFirstName || 'Worker';
+                console.log('Updated userName element');
+            });
+            
+            // Update all elements with ID userProfileName
+            document.querySelectorAll('#userProfileName').forEach(el => {
+                el.textContent = userFullName || 'Worker';
+                console.log('Updated userProfileName element');
+            });
+            
+            // Update all profile images
+            if (userProfileImage) {
+                document.querySelectorAll('img').forEach(img => {
+                    if (img.id === 'userProfileImage' || 
+                        (img.alt && img.alt.toLowerCase().includes('profile'))) {
+                        img.src = userProfileImage;
+                        console.log('Updated image:', img.id || 'unnamed img');
+                    }
+                });
+            }
+            
+            // Also update by direct ID reference
+            const userProfileNameElement = document.getElementById('userProfileName');
+            if (userProfileNameElement) {
+                userProfileNameElement.textContent = userFullName || 'Worker';
+            }
+            
+            const userNameElement = document.getElementById('userName');
+            if (userNameElement) {
+                userNameElement.textContent = userFirstName || 'Worker';
+            }
+            
+            const profileImageElement = document.getElementById('userProfileImage');
+            if (profileImageElement && userProfileImage) {
+                profileImageElement.src = userProfileImage;
+            }
+        }
+
+        // Fallback function to load worker info if imported function isn't available
+        function manuallyLoadWorkerInfo() {
+            // Get all worker data from localStorage
+            const userFirstName = localStorage.getItem('userFirstName') || '';
+            const userLastName = localStorage.getItem('userLastName') || '';
+            const userEmail = localStorage.getItem('userEmail') || '';
+            const userMobileNumber = localStorage.getItem('userMobileNumber') || '';
+            const userLocation = localStorage.getItem('userLocation') || localStorage.getItem('location') || '';
+            const profession = localStorage.getItem('profession') || '';
+            const experience = localStorage.getItem('experience') || '0';
+            const hourlyRate = localStorage.getItem('hourlyRate') || '';
+            
+            // Combine first and last name if both exist
+            const userFullName = userFirstName + (userLastName ? ` ${userLastName}` : '');
+            
+            console.log('Loading worker info - Name:', userFullName);
+            console.log('Loading worker info - Profession:', profession);
+            
+            // Update user name in header
+            const userProfileName = document.getElementById('userProfileName');
+            if (userProfileName) {
+                userProfileName.textContent = userFullName || 'Worker';
+                console.log('Updated userProfileName to:', userFullName);
+            } else {
+                console.error('userProfileName element not found!');
+            }
+            
+            // Update user name in dashboard welcome (if exists)
+            const userNameElement = document.getElementById('userName');
+            if (userNameElement) {
+                userNameElement.textContent = userFirstName || 'Worker';
+                console.log('Updated userName to:', userFirstName);
+                    } else {
+                console.error('userName element not found!');
+                // Try again with a setTimeout
+                setTimeout(() => {
+                    const retryUserNameElement = document.getElementById('userName');
+                    if (retryUserNameElement) {
+                        retryUserNameElement.textContent = userFirstName || 'Worker';
+                        console.log('Updated userName (retry) to:', userFirstName);
+                    }
+                }, 500);
+            }
+            
+            // Update profession display (if exists)
+            const professionElement = document.getElementById('userProfession');
+            if (professionElement) {
+                professionElement.textContent = profession.charAt(0).toUpperCase() + profession.slice(1) || 'Professional';
+            }
+            
+            // Update location display (if exists)
+            const locationElement = document.getElementById('userLocation');
+            if (locationElement) {
+                locationElement.textContent = userLocation.charAt(0).toUpperCase() + userLocation.slice(1) || 'Your Location';
+            }
+            
+            // Update experience display (if exists)
+            const experienceElement = document.getElementById('userExperience');
+            if (experienceElement) {
+                const expYears = parseInt(experience);
+                experienceElement.textContent = expYears > 0 ? `${expYears} Years` : 'Entry Level';
+            }
+            
+            // Update hourly rate display (if exists)
+            const hourlyRateElement = document.getElementById('userHourlyRate');
+            if (hourlyRateElement) {
+                hourlyRateElement.textContent = hourlyRate ? `₹${hourlyRate}/hr` : 'Not Set';
+            }
+            
+            // Find all elements that could be profile images 
+            const userProfileImage = localStorage.getItem('userProfileImage');
+            console.log('Profile image from localStorage:', userProfileImage);
+            
+            // Direct targeting of the profile image
+            const profileImageElement = document.getElementById('userProfileImage');
+            if (profileImageElement) {
+                if (userProfileImage) {
+                    profileImageElement.src = userProfileImage;
+                    console.log('Updated profile image from localStorage:', userProfileImage);
+                } else {
+                    // Use default image
+                    profileImageElement.src = 'https://randomuser.me/api/portraits/men/32.jpg';
+                    console.log('Using default profile image');
+                }
+            } else {
+                console.error('userProfileImage element not found!');
+                // Try again with a setTimeout
+                setTimeout(() => {
+                    const retryProfileImageElement = document.getElementById('userProfileImage');
+                    if (retryProfileImageElement && userProfileImage) {
+                        retryProfileImageElement.src = userProfileImage;
+                        console.log('Updated profile image (retry):', userProfileImage);
+                    }
+                }, 500);
+            }
+            
+            // Also find any image elements without IDs but that could be profile images
+            const allImgElements = document.querySelectorAll('img');
+            if (userProfileImage) {
+                allImgElements.forEach(img => {
+                    if (img.alt && img.alt.toLowerCase().includes('profile') && 
+                        img.src.includes('randomuser.me')) {
+                        img.src = userProfileImage;
+                        console.log('Updated profile image via query selector');
+                    }
+                });
+            }
+            
+            // Update worker stats 
+            updateWorkerStats();
+            
+            // Force a refresh of all UI elements after a short delay
+            setTimeout(() => {
+                console.log('Running delayed refresh of UI elements');
+                if (userProfileName) userProfileName.textContent = userFullName || 'Worker';
+                
+                const delayedUserNameElement = document.getElementById('userName');
+                if (delayedUserNameElement) delayedUserNameElement.textContent = userFirstName || 'Worker';
+                
+                const delayedProfileImageElement = document.getElementById('userProfileImage');
+                if (delayedProfileImageElement && userProfileImage) {
+                    delayedProfileImageElement.src = userProfileImage;
+                }
+            }, 1000);
+        }
+
+        // Add an immediate execution when the page first loads (outside of DOMContentLoaded)
+        (function() {
+            // Run immediately to update UI with localStorage data before DOMContentLoaded
+            const userFirstName = localStorage.getItem('userFirstName') || '';
+            const userLastName = localStorage.getItem('userLastName') || '';
+            const userFullName = userFirstName + (userLastName ? ` ${userLastName}` : '');
+            
+            console.log('Initial data load - User:', userFullName);
+            
+            // Add event listener for when DOM is fully loaded
+            window.addEventListener('load', function() {
+                const userProfileName = document.getElementById('userProfileName');
+                const userProfileImage = document.getElementById('userProfileImage');
+                const userNameElement = document.getElementById('userName');
+                
+                if (userProfileName) {
+                    userProfileName.textContent = userFullName || 'Worker';
+                }
+                
+                if (userNameElement) {
+                    userNameElement.textContent = userFirstName || 'Worker';
+                }
+                
+                // Set profile image
+                if (userProfileImage) {
+                    const storedImage = localStorage.getItem('userProfileImage');
+                    if (storedImage) {
+                        userProfileImage.src = storedImage;
+                    }
+                }
+                
+                // Initialize status toggle right away
+                const statusToggle = document.getElementById('statusToggle');
+                const offlineStatus = document.getElementById('offlineStatus');
+                const onlineStatus = document.getElementById('onlineStatus');
+                
+                if (statusToggle && offlineStatus && onlineStatus) {
+                    const savedStatus = localStorage.getItem('workerStatus');
+                    statusToggle.checked = savedStatus === 'online';
+                    offlineStatus.style.display = savedStatus === 'online' ? 'none' : 'inline-block';
+                    onlineStatus.style.display = savedStatus === 'online' ? 'inline-block' : 'none';
+                }
+            });
+        })();
+
+        // Function to update worker stats based on registration data
+        function updateWorkerStats() {
+            const profession = localStorage.getItem('profession') || '';
+            const experience = localStorage.getItem('experience') || '0';
+            const hourlyRate = localStorage.getItem('hourlyRate') || '0';
+            
+            // Update profession card if it exists
+            const professionCard = document.querySelector('.stat-card-profession');
+            if (professionCard) {
+                const professionValue = professionCard.querySelector('.stat-value');
+                if (professionValue) {
+                    professionValue.textContent = profession.charAt(0).toUpperCase() + profession.slice(1) || 'Professional';
+                }
+            }
+            
+            // Update experience card if it exists
+            const experienceCard = document.querySelector('.stat-card-experience');
+            if (experienceCard) {
+                const experienceValue = experienceCard.querySelector('.stat-value');
+                if (experienceValue) {
+                    const expYears = parseInt(experience);
+                    experienceValue.textContent = expYears > 0 ? `${expYears} Years` : 'Entry Level';
+                }
+            }
+            
+            // Update hourly rate card if it exists
+            const rateCard = document.querySelector('.stat-card-rate');
+            if (rateCard) {
+                const rateValue = rateCard.querySelector('.stat-value');
+                if (rateValue) {
+                    rateValue.textContent = hourlyRate ? `₹${hourlyRate}/hr` : 'Not Set';
+                }
+            }
+        }
+
+        // Logout functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutLink = document.getElementById('logoutLink');
+            
+            if (logoutLink) {
+                logoutLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Logout clicked');
+                    
+                    // Clear all worker-related localStorage items
+                    localStorage.removeItem('workerToken');
+                    localStorage.removeItem('userType');
+                    localStorage.removeItem('userFirstName');
+                    localStorage.removeItem('userLastName');
+                    localStorage.removeItem('userEmail');
+                    localStorage.removeItem('userMobileNumber');
+                    localStorage.removeItem('location');
+                    localStorage.removeItem('userLocation');
+                    localStorage.removeItem('profession');
+                    localStorage.removeItem('experience');
+                    localStorage.removeItem('hourlyRate');
+                    localStorage.removeItem('workerStatus');
+                    
+                    console.log('All worker data cleared from localStorage');
+                    
+                    // Redirect to login page
+                    window.location.href = 'worker-login.html';
+                });
+                console.log('Logout listener attached');
+            } else {
+                console.error('Logout link not found');
+            }
+        });
+    </script>
+</body>
+</html> 

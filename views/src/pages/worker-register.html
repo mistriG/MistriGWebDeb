@@ -285,6 +285,7 @@
                 <div class="form-group">
                 <label for="fullname">Full Name</label>
                 <input type="text" id="fullname" name="fullname" placeholder="Enter your full name" required>
+                <small class="helper-text" style="display: block; color: #757575; margin-top: 3px;">Please enter your full name with last name having minimum 3 characters.</small>
                 <div class="error">Please enter your full name</div>
             </div>
             
@@ -549,117 +550,152 @@
             // Store form reference to avoid any nesting issues
             const registrationForm = newForm;
             
-            // Handle form submission
-            function handleFormSubmit(e) {
-                e.preventDefault();
-                console.log("Form submission handler called");
+            // Define the showMessage function at the top of your script
+            function showMessage(message, type = 'error') {
+                // Find or create error display element
+                let messageDisplay = document.getElementById('messageDisplay');
                 
-                // Prevent duplicate submissions
+                if (!messageDisplay) {
+                    messageDisplay = document.createElement('div');
+                    messageDisplay.id = 'messageDisplay';
+                    messageDisplay.style.padding = '10px';
+                    messageDisplay.style.margin = '10px 0';
+                    messageDisplay.style.borderRadius = '4px';
+                    messageDisplay.style.fontWeight = 'bold';
+                    
+                    // Insert at the top of the form
+                    const form = document.getElementById('workerRegisterForm');
+                    form.parentNode.insertBefore(messageDisplay, form);
+                }
+                
+                // Set message and styling based on type
+                messageDisplay.textContent = message;
+                
+                if (type === 'error') {
+                    messageDisplay.style.backgroundColor = '#ffebee';
+                    messageDisplay.style.color = '#c62828';
+                    messageDisplay.style.border = '1px solid #ef9a9a';
+                } else if (type === 'success') {
+                    messageDisplay.style.backgroundColor = '#e8f5e9';
+                    messageDisplay.style.color = '#2e7d32';
+                    messageDisplay.style.border = '1px solid #a5d6a7';
+                } else if (type === 'warning') {
+                    messageDisplay.style.backgroundColor = '#fff8e1';
+                    messageDisplay.style.color = '#f57f17';
+                    messageDisplay.style.border = '1px solid #ffe082';
+                }
+                
+                // Show the message
+                messageDisplay.style.display = 'block';
+                
+                // Scroll to the message
+                messageDisplay.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            // Form submission handler
+            async function handleFormSubmit(event) {
+                event.preventDefault();
+                console.log('Form submission handler called');
+                
                 if (isSubmitting) {
-                    console.log("Already submitting, ignoring duplicate submission attempt");
+                    console.log('Form is already submitting, preventing duplicate submission');
                     return;
                 }
                 
-                // Reset fetch counter for this submission
-                fetchRequestsCount = 0;
-                
-                // Mark as submitting
                 isSubmitting = true;
                 
-                // Get submit button
-                const submitBtn = registrationForm.querySelector('button[type="submit"]');
-                submitBtn.disabled = true;
-                submitBtn.textContent = "Registering...";
-                
-                // Hide any previous error
-                errorDisplay.style.display = 'none';
-                
-                // Use setTimeout to break event chain
-                setTimeout(async function() {
-                    try {
-                        // Get form values
-                        const fullname = registrationForm.fullname.value.trim();
-                        const nameParts = fullname.includes(" ") ? 
-                            fullname.split(" ") : [fullname, ""];
-                        
-                        const workerData = {
-                            fullname: {
-                                firstname: nameParts[0],
-                                lastname: nameParts.slice(1).join(" ")
-                            },
-                            email: registrationForm.email.value.trim(),
-                            password: registrationForm.password.value,
-                            phoneNumber: registrationForm.phoneNumber.value.trim(),
-                            location: registrationForm.location.value,
-                            profession: registrationForm.profession.value,
-                            experience: parseInt(registrationForm.experience.value),
-                            hourlyRate: parseInt(registrationForm.hourlyRate.value),
-                            regularPrice: parseInt(registrationForm.regularPrice.value || "0"),
-                            availability: registrationForm.availability.value,
-                            bio: registrationForm.description.value.trim(),
-                            skills: Array.from(registrationForm.querySelectorAll('input[name="skills"]:checked'))
-                                .map(cb => cb.value),
-                            address: {
-                                street: registrationForm.streetAddress.value.trim(),
-                                city: registrationForm.city.value.trim(),
-                                state: registrationForm.state.value.trim(),
-                                postalCode: registrationForm.postalCode.value.trim(),
-                                country: registrationForm.country.value
-                            }
-                        };
-                        
-                        console.log("Sending worker registration data:", workerData);
-                        
-                        const response = await fetch(`${API_URL}/workers/register`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(workerData)
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (!response.ok) {
-                            throw new Error(data.message || data.error || "Registration failed");
-                        }
-                        
-                        console.log("Worker registered successfully:", data.worker.fullname);
-                        console.log(`Total fetch requests made: ${fetchRequestsCount}`);
-                        
-                        // Store in localStorage
-                        localStorage.setItem("workerToken", data.token);
-                        localStorage.setItem("userType", "worker");
-                        localStorage.setItem("userFirstName", data.worker.fullname.firstname);
-                        localStorage.setItem("userEmail", data.worker.email);
-                        
-                        // Log localStorage contents
-                        console.log("Local storage contents:");
-                        for (let i = 0; i < localStorage.length; i++) {
-                            const key = localStorage.key(i);
-                            console.log(`${key}: ${localStorage.getItem(key)}`);
-                        }
-                        
-                        // Success message
-                        alert("Registration successful! Redirecting to dashboard...");
-                        
-                        // Redirect
-                        setTimeout(() => {
-                            window.location.href = "/worker-dashboard.html";
-                        }, 1000);
-                        
-                    } catch (error) {
-                        console.error("Worker registration error:", error);
-                        
-                        // Show error
-                        errorDisplay.textContent = error.message || "Registration failed. Please try again.";
-                        errorDisplay.style.display = 'block';
-                        
-                    } finally {
-                        // Reset submission state
-                        isSubmitting = false;
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = "Create Worker Account";
+                try {
+                    // Get form data
+                    const formData = new FormData(event.target);
+                    const fullname = formData.get('fullname').trim();
+                    
+                    // Split the full name into first and last name
+                    let firstname = fullname;
+                    let lastname = '';
+                    
+                    // If there's a space, split into first and last name
+                    if (fullname.includes(' ')) {
+                        const nameParts = fullname.split(' ');
+                        firstname = nameParts[0];
+                        lastname = nameParts.slice(1).join(' ');
                     }
-                }, 10); // Small timeout to break event chain
+                    
+                    // Validate last name length based on server requirements
+                    if (!lastname || lastname.length < 3) {
+                        showMessage('Last name must be at least 3 characters long. Please enter your full name (First Last).', 'error');
+                        isSubmitting = false;
+                        return;
+                    }
+                    
+                    // Create worker data object
+                    const workerData = {
+                        fullname: {
+                            firstname: firstname,
+                            lastname: lastname
+                        },
+                        email: formData.get('email').trim(),
+                        password: formData.get('password'),
+                        phoneNumber: formData.get('phoneNumber').trim(),
+                        location: formData.get('location').trim(),
+                        profession: formData.get('profession').trim(),
+                        skills: formData.getAll('skills'),
+                        experience: parseInt(formData.get('experience')),
+                        hourlyRate: parseFloat(formData.get('hourlyRate')),
+                        availability: formData.get('availability') === 'on'
+                    };
+                    
+                    console.log('Sending worker registration data:', workerData);
+                    
+                    // Make API call - FIX THE ENDPOINT HERE
+                    console.log('Fetch request #1 made to', `${API_URL}/workers/register`);
+                    const response = await fetch(`${API_URL}/workers/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(workerData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Registration failed');
+                    }
+                    
+                    // Store worker data in localStorage
+                    localStorage.setItem('workerToken', data.token);
+                    localStorage.setItem('userType', 'worker');
+                    localStorage.setItem('userFirstName', workerData.fullname.firstname);
+                    localStorage.setItem('userLastName', workerData.fullname.lastname);
+                    localStorage.setItem('userEmail', workerData.email);
+                    localStorage.setItem('userMobileNumber', workerData.phoneNumber);
+                    localStorage.setItem('profession', workerData.profession);
+                    localStorage.setItem('location', workerData.location);
+                    localStorage.setItem('experience', workerData.experience.toString());
+                    localStorage.setItem('hourlyRate', workerData.hourlyRate.toString());
+                    localStorage.setItem('userLocation', workerData.location);
+                    
+                    // Log localStorage contents for debugging
+                    console.log('localStorage after registration:');
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        console.log(`${key}: ${localStorage.getItem(key)}`);
+                    }
+                    
+                    // Show success message
+                    showMessage('Registration successful! Redirecting to dashboard...', 'success');
+                    
+                    // Redirect to dashboard after a delay
+                    setTimeout(() => {
+                        window.location.href = 'worker-dashboard.html';
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('Worker registration error:', error);
+                    showMessage(error.message || 'Registration failed. Please try again.', 'error');
+                } finally {
+                    isSubmitting = false;
+                }
             }
             
             // Remove any previous listeners

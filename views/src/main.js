@@ -55,6 +55,12 @@ async function registerWorker(workerData) {
                 localStorage.setItem('userFirstName', formattedData.fullname.firstname);
             }
             
+            if (data.worker && data.worker.fullname && data.worker.fullname.lastname) {
+                localStorage.setItem('userLastName', data.worker.fullname.lastname);
+            } else if (formattedData.fullname && formattedData.fullname.lastname) {
+                localStorage.setItem('userLastName', formattedData.fullname.lastname);
+            }
+            
             if (data.worker && data.worker.email) {
                 localStorage.setItem('userEmail', data.worker.email);
             } else {
@@ -67,7 +73,51 @@ async function registerWorker(workerData) {
                 localStorage.setItem('userMobileNumber', formattedData.phoneNumber);
             }
             
+            if (data.worker && data.worker.location) {
+                localStorage.setItem('location', data.worker.location);
+                localStorage.setItem('userLocation', data.worker.location);
+            } else if (formattedData.location) {
+                localStorage.setItem('location', formattedData.location);
+                localStorage.setItem('userLocation', formattedData.location);
+            }
+            
+            if (data.worker && data.worker.profession) {
+                localStorage.setItem('profession', data.worker.profession);
+            } else if (formattedData.profession) {
+                localStorage.setItem('profession', formattedData.profession);
+            }
+            
+            if (data.worker && data.worker.experience) {
+                localStorage.setItem('experience', data.worker.experience.toString());
+            } else if (formattedData.experience) {
+                localStorage.setItem('experience', formattedData.experience.toString());
+            }
+            
+            if (data.worker && data.worker.hourlyRate) {
+                localStorage.setItem('hourlyRate', data.worker.hourlyRate.toString());
+            } else if (formattedData.hourlyRate) {
+                localStorage.setItem('hourlyRate', formattedData.hourlyRate.toString());
+            }
+            
+            if (data.worker && data.worker.profileImage) {
+                localStorage.setItem('userProfileImage', data.worker.profileImage);
+            } else {
+                // Set default profile image
+                localStorage.setItem('userProfileImage', 'https://randomuser.me/api/portraits/men/32.jpg');
+            }
+            
+            // Set default worker status
+            localStorage.setItem('workerStatus', 'offline');
+            
             console.log('Worker registered successfully:', data.worker ? data.worker.fullname : formattedData.fullname);
+            
+            // Log all localStorage for debugging
+            console.log('localStorage contents after registration:');
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                console.log(`${key}: ${localStorage.getItem(key)}`);
+            }
+            
             window.location.href = '/src/pages/worker-dashboard.html';
             return data;
         }
@@ -111,6 +161,193 @@ function isWorker() {
     const workerToken = localStorage.getItem('workerToken');
     const userType = localStorage.getItem('userType');
     return workerToken && userType === 'worker';
+}
+
+// Load worker information from localStorage and update UI elements
+function loadWorkerInfo() {
+    // Get all worker data from localStorage
+    const userFirstName = localStorage.getItem('userFirstName') || '';
+    const userLastName = localStorage.getItem('userLastName') || '';
+    const userEmail = localStorage.getItem('userEmail') || '';
+    const userMobileNumber = localStorage.getItem('userMobileNumber') || '';
+    const userLocation = localStorage.getItem('userLocation') || '';
+    const profession = localStorage.getItem('profession') || '';
+    const experience = localStorage.getItem('experience') || '0';
+    const hourlyRate = localStorage.getItem('hourlyRate') || '';
+    const userBio = localStorage.getItem('userBio') || '';
+    
+    // Combine first and last name if both exist
+    const userFullName = userFirstName + (userLastName ? ` ${userLastName}` : '');
+    
+    console.log('Loading worker info - Name:', userFullName);
+    console.log('Loading worker info - Profession:', profession);
+    
+    // Update user name in header
+    const userProfileName = document.getElementById('userProfileName');
+    if (userProfileName) {
+        userProfileName.textContent = userFullName || 'Worker';
+    }
+    
+    // Update user name in dashboard welcome (if exists)
+    const userNameElement = document.getElementById('userName');
+    if (userNameElement) {
+        userNameElement.textContent = userFirstName || 'Worker';
+    }
+    
+    // Update profession display (if exists)
+    const professionElement = document.getElementById('userProfession');
+    if (professionElement) {
+        professionElement.textContent = profession.charAt(0).toUpperCase() + profession.slice(1) || 'Professional';
+    }
+    
+    // Update location display (if exists)
+    const locationElement = document.getElementById('userLocation');
+    if (locationElement) {
+        locationElement.textContent = userLocation.charAt(0).toUpperCase() + userLocation.slice(1) || 'Your Location';
+    }
+    
+    // Update experience display (if exists)
+    const experienceElement = document.getElementById('userExperience');
+    if (experienceElement) {
+        const expYears = parseInt(experience);
+        experienceElement.textContent = expYears > 0 ? `${expYears} Years` : 'Entry Level';
+    }
+    
+    // Update hourly rate display (if exists)
+    const hourlyRateElement = document.getElementById('userHourlyRate');
+    if (hourlyRateElement) {
+        hourlyRateElement.textContent = hourlyRate ? `₹${hourlyRate}/hr` : 'Not Set';
+    }
+    
+    // Update bio display (if exists)
+    const bioElement = document.getElementById('userBio');
+    if (bioElement) {
+        bioElement.textContent = userBio || 'No bio provided';
+    }
+    
+    // Update profile image if available (if exists)
+    const userProfileImage = localStorage.getItem('userProfileImage') || sessionStorage.getItem('userProfileImage');
+    
+    // Look for all profile image elements with common IDs
+    const profileImageSelectors = [
+        '#userProfileImage',
+        '#profilePicturePreview',
+        '.worker-profile-image',
+        '.profile-image'
+    ];
+    
+    if (userProfileImage) {
+        profileImageSelectors.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                if (element.src !== userProfileImage) {
+                    element.src = userProfileImage;
+                    console.log(`Updated profile image for element ${selector}`);
+                }
+            });
+        });
+    } else {
+        // Set default avatar if no profile image is available
+        const defaultAvatar = 'https://randomuser.me/api/portraits/men/32.jpg';
+        profileImageSelectors.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                if (!element.src || element.src.includes('randomuser.me')) {
+                    element.src = defaultAvatar;
+                }
+            });
+        });
+    }
+    
+    // Update worker profile full name (if exists)
+    const workerProfileFullName = document.getElementById('workerProfileFullName');
+    if (workerProfileFullName) {
+        workerProfileFullName.textContent = userFullName || 'Worker';
+    }
+    
+    // Update worker full name in profile (if exists)
+    const workerFullName = document.getElementById('workerFullName');
+    if (workerFullName) {
+        workerFullName.textContent = userFullName || 'Not Available';
+    }
+    
+    // Update worker email in profile (if exists)
+    const workerEmail = document.getElementById('workerEmail');
+    if (workerEmail) {
+        workerEmail.textContent = userEmail || 'Not Available';
+    }
+    
+    // Update worker phone number in profile (if exists)
+    const workerPhone = document.getElementById('workerPhone');
+    if (workerPhone) {
+        workerPhone.textContent = userMobileNumber || 'Not Available';
+    }
+    
+    // Update worker stats cards with the latest information
+    updateWorkerStats();
+}
+
+// Function to update worker stats based on registration data
+function updateWorkerStats() {
+    const profession = localStorage.getItem('profession') || '';
+    const experience = localStorage.getItem('experience') || '0';
+    const hourlyRate = localStorage.getItem('hourlyRate') || '0';
+    
+    // Update profession card if it exists
+    const professionCard = document.querySelector('.stat-card-profession');
+    if (professionCard) {
+        const professionValue = professionCard.querySelector('.stat-value');
+        if (professionValue) {
+            professionValue.textContent = profession.charAt(0).toUpperCase() + profession.slice(1) || 'Professional';
+        }
+    }
+    
+    // Update experience card if it exists
+    const experienceCard = document.querySelector('.stat-card-experience');
+    if (experienceCard) {
+        const experienceValue = experienceCard.querySelector('.stat-value');
+        if (experienceValue) {
+            const expYears = parseInt(experience);
+            experienceValue.textContent = expYears > 0 ? `${expYears} Years` : 'Entry Level';
+        }
+    }
+    
+    // Update hourly rate card if it exists
+    const rateCard = document.querySelector('.stat-card-rate');
+    if (rateCard) {
+        const rateValue = rateCard.querySelector('.stat-value');
+        if (rateValue) {
+            rateValue.textContent = hourlyRate ? `₹${hourlyRate}/hr` : 'Not Set';
+        }
+    }
+    
+    // Update stats in any other cards that might exist
+    const completedJobsCard = document.querySelector('.stat-card-completed');
+    if (completedJobsCard) {
+        const completedValue = completedJobsCard.querySelector('.stat-value');
+        if (completedValue && !completedValue.dataset.realValue) {
+            // Only update if it doesn't have real data
+            completedValue.textContent = '0';
+        }
+    }
+    
+    const earningsCard = document.querySelector('.stat-card-earnings');
+    if (earningsCard) {
+        const earningsValue = earningsCard.querySelector('.stat-value');
+        if (earningsValue && !earningsValue.dataset.realValue) {
+            // Only update if it doesn't have real data
+            earningsValue.textContent = '₹0';
+        }
+    }
+    
+    const ratingCard = document.querySelector('.stat-card-rating');
+    if (ratingCard) {
+        const ratingValue = ratingCard.querySelector('.stat-value');
+        if (ratingValue && !ratingValue.dataset.realValue) {
+            // Only update if it doesn't have real data
+            ratingValue.textContent = 'No Ratings';
+        }
+    }
 }
 
 // Redirect to appropriate login if not authenticated

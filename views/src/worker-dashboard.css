@@ -33,7 +33,7 @@ body {
     width: 250px;
     background: var(--primary-color);
     color: var(--white);
-    padding: 20px 0;
+    padding: 25px 0;
     transition: all 0.3s;
     z-index: 100;
 }
@@ -426,37 +426,80 @@ input:checked + .slider:before {
     background: #e53935;
 }
 
-/* Pulsing Map Marker */
-.pulsing-marker {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--secondary-color);
+/* Worker info styles */
+.info-card {
+    margin-bottom: 20px;
+}
+
+.worker-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.info-item {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: pulse 1.5s infinite;
-    box-shadow: 0 0 0 rgba(76, 175, 80, 0.4);
+    flex-direction: column;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 5px;
 }
 
-.pulsing-marker img {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid white;
+.info-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
 }
 
-@keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
-    }
+.info-value {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1a237e;
+}
+
+.profile-link {
+    display: inline-block;
+    margin-top: 15px;
+    color: #1a237e;
+    text-decoration: none;
+    padding: 5px 10px;
+    background: #e8eaf6;
+    border-radius: 5px;
+}
+
+.profile-link:hover {
+    background: #c5cae9;
+}
+
+/* Debug button styles */
+.debug-button {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    z-index: 9999;
+    background-color: #ff5722;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.debug-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    z-index: 10000;
+    max-width: 80%;
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 /* Responsive Styles */

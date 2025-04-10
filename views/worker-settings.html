@@ -4,6 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Worker Settings - MistriG</title>
+    <!-- Emergency cleanup script to run immediately -->
+    <script>
+        // Immediately clear any large temporary images
+        (function() {
+            try {
+                console.log("Emergency cleanup: Removing large temp images");
+                localStorage.removeItem('tempProfileImage');
+                sessionStorage.removeItem('tempProfileImage');
+                
+                // Check for other large items
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    if (value && value.length > 1000000) { // Larger than ~1MB
+                        console.log(`Found large item in localStorage: ${key} (~${Math.round(value.length/1024)}KB)`);
+                        if (key.includes('Image') || key.includes('image')) {
+                            console.log(`Removing large image: ${key}`);
+                            localStorage.removeItem(key);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Error during emergency cleanup:", e);
+            }
+        })();
+    </script>
     <!-- Include Axios -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="src/style.css">
@@ -179,6 +205,45 @@
         input:checked + .switch-slider:before {
             transform: translateX(26px);
         }
+        
+        /* Profile picture styling */
+        .profile-picture-container {
+            margin-bottom: 30px;
+        }
+        
+        .profile-picture-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        #profilePicturePreview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #1a237e;
+        }
+        
+        #profilePicture {
+            display: none;
+        }
+        
+        .btn-upload {
+            background: #e8eaf6;
+            color: #1a237e;
+            border: 1px solid #c5cae9;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn-upload:hover {
+            background: #c5cae9;
+        }
     </style>
 </head>
 <body>
@@ -186,12 +251,12 @@
         <!-- Sidebar Navigation -->
         <div class="sidebar">
             <div class="logo-container">
-                <img src="/src/Images/mg.png" alt="MistriG">
+                <img src="src/Images/mg.png" alt="MistriG">
                 <h2>MistriG</h2>
             </div>
             <ul class="nav-menu">
                 <li>
-                    <a href="worker-dashboard.html">
+                    <a href="src/pages/worker-dashboard.html">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                         Dashboard
                     </a>
@@ -199,11 +264,11 @@
                 <li>
                     <a href="worker-orders.html">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                        Orders
+                        Working Calls
                     </a>
                 </li>
                 <li>
-                    <a href="worker-earnings.html">
+                    <a href="src/pages/worker-earnings.html">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                         Earnings
                     </a>
@@ -248,8 +313,8 @@
                         <span class="badge">3</span>
                     </div>
                     <div class="user-profile" id="userProfileBtn">
-                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Profile">
-                        <span>Rahul Sharma</span>
+                        <img id="userProfileImage" src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Profile">
+                        <span id="userProfileName">Loading...</span>
                     </div>
                 </div>
             </div>
@@ -267,10 +332,27 @@
                 
                 <!-- Account Settings -->
                 <div class="settings-content active" id="account-settings">
-                    <form id="account-form">
+                    <div class="info-message" style="background-color: #e1f5fe; color: #0277bd; padding: 10px; border-radius: 4px; margin-bottom: 20px;">
+                        <strong>Note:</strong> Your profile changes will be saved and reflected across all pages of the application. Make sure to enter your full name with a last name of at least 3 characters.
+                    </div>
+                    <form id="account-form" enctype="multipart/form-data">
+                        <div class="form-group profile-picture-container">
+                            <label for="profilePicture">Profile Picture</label>
+                            <div class="profile-picture-wrapper">
+                                <img id="profilePicturePreview" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Profile Picture">
+                                <input type="file" id="profilePicture" class="form-control" accept="image/*">
+                                <button type="button" id="uploadPictureBtn" class="btn-upload">Change Picture</button>
+                                <small class="form-text" style="color: #757575; text-align: center; margin-top: 5px;">
+                                    Please use a small image file (preferably under 1MB).<br>
+                                    Uploading a new image will replace your existing profile picture.<br>
+                                    Large images may be compressed automatically.
+                                </small>
+                            </div>
+                        </div>
                         <div class="form-group">
-                            <label for="name">Full Name</label>
+                            <label for="name">Full Name <span style="color: #d32f2f;">*</span></label>
                             <input type="text" id="name" class="form-control" value="Rahul Sharma">
+                            <small class="form-text" style="color: #757575;">Please enter your full name with last name having minimum 3 characters.</small>
                         </div>
                         <div class="form-group">
                             <label for="email">Email</label>
@@ -283,7 +365,7 @@
                         <div class="form-group">
                             <label for="skill">Primary Skill</label>
                             <select id="skill" class="form-control">
-                                <option value="plumber" selected>Plumber</option>
+                                <option value="plumber">Plumber</option>
                                 <option value="electrician">Electrician</option>
                                 <option value="carpenter">Carpenter</option>
                                 <option value="painter">Painter</option>
@@ -297,6 +379,10 @@
                         <div class="form-group">
                             <label for="experience">Experience (years)</label>
                             <input type="number" id="experience" class="form-control" value="8">
+                        </div>
+                        <div class="form-group">
+                            <label for="hourly-rate">Hourly Rate (₹)</label>
+                            <input type="number" id="hourly-rate" class="form-control" value="500">
                         </div>
                         <div class="form-group">
                             <label for="bio">Bio/Description</label>
@@ -419,37 +505,385 @@
 
     <script src="src/main.js" type="module"></script>
     <script src="src/api-service.js"></script>
-    <script type="module">
-        // Import logout function from main.js
-        import { logout } from '/src/main.js';
-        
-        // Immediately set toggle state based on localStorage (before any events fire)
-        (function() {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check localStorage available space
+            function checkLocalStorageSpace() {
+                let total = 0;
+                let largestItem = { key: '', size: 0 };
+                
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    const size = (value.length * 2) / 1024; // estimate in KB
+                    
+                    total += size;
+                    
+                    if (size > largestItem.size) {
+                        largestItem = { key, size };
+                    }
+                }
+                
+                console.log(`Total localStorage usage: ~${total.toFixed(2)}KB`);
+                console.log(`Largest item: ${largestItem.key} (~${largestItem.size.toFixed(2)}KB)`);
+                
+                // Estimate remaining space (this is just an approximation)
+                // Most browsers allocate around 5-10MB per domain
+                const estimatedLimit = 5 * 1024; // 5MB in KB
+                const estimatedAvailable = Math.max(0, estimatedLimit - total);
+                console.log(`Estimated available space: ~${estimatedAvailable.toFixed(2)}KB`);
+                
+                return {
+                    used: total,
+                    largest: largestItem,
+                    available: estimatedAvailable
+                };
+            }
+            
+            // Function to clear space in localStorage
+            function clearSpaceInLocalStorage() {
+                // Items that could be safely removed if needed
+                const cleanupCandidates = [
+                    'tempProfileImage', // Temporary image data
+                    'debug_info', // Any debug information
+                    'lastViewedPage', // Navigation history
+                    'cacheData', // Any cached data
+                    'localPreferences' // Non-critical preferences
+                ];
+                
+                // Try clearing candidates first
+                for (const key of cleanupCandidates) {
+                    if (localStorage.getItem(key)) {
+                        console.log(`Clearing localStorage item: ${key}`);
+                        localStorage.removeItem(key);
+                    }
+                }
+                
+                // Check if we have large image data we could compress or remove
+                const imageDataKeys = ['userProfileImage', 'tempProfileImage'];
+                for (const key of imageDataKeys) {
+                    const value = localStorage.getItem(key);
+                    if (value && value.length > 500000) { // If image is larger than ~500KB
+                        console.log(`Found large image in ${key} (${(value.length/1024).toFixed(2)}KB), removing to free space`);
+                        localStorage.removeItem(key);
+                    }
+                }
+                
+                return checkLocalStorageSpace();
+            }
+            
+            // Store image data with fallback options
+            function storeImageData(key, imageData) {
+                // First remove any existing data with the same key to free up space
+                try {
+                    localStorage.removeItem(key);
+                    sessionStorage.removeItem(key);
+                } catch (e) {
+                    console.warn('Error clearing old image data:', e);
+                }
+                
+                // Try localStorage first
+                try {
+                    localStorage.setItem(key, imageData);
+                    return { success: true, storage: 'localStorage' };
+                } catch (e) {
+                    console.warn('localStorage failed, trying to clear space');
+                    
+                    // Try to clear some space
+                    clearSpaceInLocalStorage();
+                    
+                    // Try localStorage again
+                    try {
+                        localStorage.setItem(key, imageData);
+                        return { success: true, storage: 'localStorage (after cleanup)' };
+                    } catch (e2) {
+                        console.warn('localStorage still failed, trying sessionStorage');
+                        
+                        // Fall back to sessionStorage (will be lost on browser close)
+                        try {
+                            sessionStorage.setItem(key, imageData);
+                            return { success: true, storage: 'sessionStorage', temporary: true };
+                        } catch (e3) {
+                            console.error('All storage methods failed');
+                            return { success: false, error: e3 };
+                        }
+                    }
+                }
+            }
+            
+            // Function to check and optimize existing profile image
+            function checkAndOptimizeProfileImage() {
+                const existingImage = localStorage.getItem('userProfileImage') || sessionStorage.getItem('userProfileImage');
+                if (!existingImage) return;
+                
+                // Check size of existing image
+                const imageSizeKB = Math.round((existingImage.length * 3) / 4) / 1024;
+                console.log(`Existing profile image size: ~${imageSizeKB.toFixed(2)}KB`);
+                
+                // If image is large, compress it
+                if (imageSizeKB > 300) { // If larger than 300KB
+                    console.log('Existing profile image is large, will compress it');
+                    
+                    const img = new Image();
+                    img.onload = function() {
+                        // Create canvas to resize image
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        // Calculate new dimensions (max 200px for profile)
+                        const maxSize = 200;
+                        if (width > height) {
+                            if (width > maxSize) {
+                                height = Math.round(height * (maxSize / width));
+                                width = maxSize;
+                            }
+                        } else {
+                            if (height > maxSize) {
+                                width = Math.round(width * (maxSize / height));
+                                height = maxSize;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, width, height);
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Compress the image
+                        const compressedImage = canvas.toDataURL('image/jpeg', 0.6);
+                        const newSizeKB = Math.round((compressedImage.length * 3) / 4) / 1024;
+                        
+                        console.log(`Compressed profile image from ${imageSizeKB.toFixed(2)}KB to ${newSizeKB.toFixed(2)}KB`);
+                        
+                        // Store the compressed image, removing the old one first
+                        localStorage.removeItem('userProfileImage');
+                        sessionStorage.removeItem('userProfileImage');
+                        
+                        try {
+                            localStorage.setItem('userProfileImage', compressedImage);
+                            console.log('Successfully stored optimized profile image in localStorage');
+                            
+                            // Update display if needed
+                            const profileImageEl = document.getElementById('userProfileImage');
+                            const profilePicturePreview = document.getElementById('profilePicturePreview');
+                            
+                            if (profileImageEl) profileImageEl.src = compressedImage;
+                            if (profilePicturePreview) profilePicturePreview.src = compressedImage;
+                        } catch (e) {
+                            console.warn('Failed to store compressed image in localStorage, falling back to sessionStorage');
+                            try {
+                                sessionStorage.setItem('userProfileImage', compressedImage);
+                            } catch (e2) {
+                                console.error('All storage methods failed for optimized image');
+                            }
+                        }
+                    };
+                    img.src = existingImage;
+                }
+            }
+            
+            // Run storage check on page load
+            const storageStatus = checkLocalStorageSpace();
+            
+            // Check and optimize existing profile image
+            checkAndOptimizeProfileImage();
+            
+            // Load worker information from localStorage
+            const userFirstName = localStorage.getItem('userFirstName') || '';
+            const userLastName = localStorage.getItem('userLastName') || '';
+            const userFullName = userFirstName + (userLastName ? ' ' + userLastName : '');
+            const userEmail = localStorage.getItem('userEmail') || '';
+            const userMobileNumber = localStorage.getItem('userMobileNumber') || '';
+            const userLocation = localStorage.getItem('userLocation') || '';
+            const profession = localStorage.getItem('profession') || '';
+            const experience = localStorage.getItem('experience') || '';
+            const hourlyRate = localStorage.getItem('hourlyRate') || '';
+            const userBio = localStorage.getItem('userBio') || '';
+            
+            // Update profile name in header
+            const userProfileName = document.getElementById('userProfileName');
+            if (userProfileName) {
+                userProfileName.textContent = userFullName || 'Worker';
+            }
+            
+            // Update profile image if available
+            const userProfileImage = localStorage.getItem('userProfileImage');
+            const profileImageEl = document.getElementById('userProfileImage');
+            const profilePicturePreview = document.getElementById('profilePicturePreview');
+            
+            if (profileImageEl && userProfileImage) {
+                profileImageEl.src = userProfileImage;
+            }
+            
+            if (profilePicturePreview && userProfileImage) {
+                profilePicturePreview.src = userProfileImage;
+            }
+            
+            // Pre-fill form fields with localStorage data
+            const nameField = document.getElementById('name');
+            const emailField = document.getElementById('email');
+            const phoneField = document.getElementById('phone');
+            const skillField = document.getElementById('skill');
+            const locationField = document.getElementById('location');
+            const experienceField = document.getElementById('experience');
+            const hourlyRateField = document.getElementById('hourly-rate');
+            const bioField = document.getElementById('bio');
+            
+            if (nameField) nameField.value = userFullName;
+            if (emailField) emailField.value = userEmail;
+            if (phoneField) phoneField.value = userMobileNumber;
+            if (locationField) locationField.value = userLocation;
+            if (experienceField) experienceField.value = experience;
+            if (hourlyRateField) hourlyRateField.value = hourlyRate;
+            if (bioField) bioField.value = userBio;
+            
+            // Select the correct profession in dropdown
+            if (skillField && profession) {
+                for (let i = 0; i < skillField.options.length; i++) {
+                    if (skillField.options[i].value === profession) {
+                        skillField.options[i].selected = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Handle profile picture upload button
+            const uploadPictureBtn = document.getElementById('uploadPictureBtn');
+            const profilePictureInput = document.getElementById('profilePicture');
+            
+            if (uploadPictureBtn && profilePictureInput) {
+                uploadPictureBtn.addEventListener('click', function() {
+                    profilePictureInput.click();
+                });
+                
+                profilePictureInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Check file size before processing
+                        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                            alert('Image is too large. Please select an image under 5MB.');
+                            return;
+                        }
+                        
+                        // Check localStorage space
+                        const storageSpace = checkLocalStorageSpace();
+                        if (storageSpace.available < 300) { // Need at least 300KB free
+                            alert('Your browser storage is nearly full. Please clear some browser data before uploading a new image.');
+                            return;
+                        }
+                        
+                        const reader = new FileReader();
+                        reader.onload = function(evt) {
+                            // Resize and compress the image
+                            const img = new Image();
+                            img.onload = function() {
+                                // Create canvas to resize image
+                                const canvas = document.createElement('canvas');
+                                let width = img.width;
+                                let height = img.height;
+                                
+                                // Calculate new dimensions (max 200px in any dimension for better compression)
+                                const maxSize = 200;
+                                if (width > height) {
+                                    if (width > maxSize) {
+                                        height = Math.round(height * (maxSize / width));
+                                        width = maxSize;
+                                    }
+                                } else {
+                                    if (height > maxSize) {
+                                        width = Math.round(width * (maxSize / height));
+                                        height = maxSize;
+                                    }
+                                }
+                                
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.fillStyle = '#FFFFFF'; // White background for JPEGs
+                                ctx.fillRect(0, 0, width, height);
+                                ctx.drawImage(img, 0, 0, width, height);
+                                
+                                // Try different compression levels if needed
+                                let compressedImgData;
+                                let quality = 0.5; // Start with 50% quality for more aggressive compression
+                                let imgDataSize;
+                                
+                                // Try to compress until we get an acceptable size
+                                try {
+                                    do {
+                                        compressedImgData = canvas.toDataURL('image/jpeg', quality);
+                                        imgDataSize = Math.round((compressedImgData.length * 3) / 4); // Base64 size estimate
+                                        console.log(`Compressed image size at ${quality*100}% quality: ~${(imgDataSize/1024).toFixed(2)}KB`);
+                                        
+                                        // If still too big, reduce quality and try again
+                                        if (imgDataSize > Math.min(1024 * 1024, storageSpace.available * 1024 * 0.8)) { // Max 1MB or 80% of available space
+                                            quality -= 0.1;
+                                        }
+                                    } while (quality >= 0.3 && imgDataSize > Math.min(1024 * 1024, storageSpace.available * 1024 * 0.8));
+                                    
+                                    // If it's still too large
+                                    if (imgDataSize > Math.min(1024 * 1024, storageSpace.available * 1024 * 0.8)) {
+                                        alert('Image is still too large after compression. Please select a smaller image.');
+                                        return;
+                                    }
+                                    
+                                    // Update preview
+                                    if (profilePicturePreview) {
+                                        profilePicturePreview.src = compressedImgData;
+                                    }
+                                    
+                                    // Store in localStorage for temporary preview
+                                    try {
+                                        const storageResult = storeImageData('tempProfileImage', compressedImgData);
+                                        if (storageResult.success) {
+                                            console.log(`Successfully stored compressed image (${(imgDataSize/1024).toFixed(2)}KB) in ${storageResult.storage}`);
+                                            if (storageResult.temporary) {
+                                                alert('Your image was stored temporarily and may be lost when you close your browser. Consider clearing some browser data for permanent storage.');
+                                            }
+                                        } else {
+                                            throw new Error('Storage failed');
+                                        }
+                                    } catch (storageError) {
+                                        console.error('Error storing image:', storageError);
+                                        alert('Unable to store the image. Please select a smaller image or clear your browser cache.');
+                                    }
+                                } catch (compressionError) {
+                                    console.error('Error compressing image:', compressionError);
+                                    alert('Error processing the image. Please try again with a different image.');
+                                }
+                            };
+                            img.src = evt.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+            
+            // Set toggle state based on localStorage
             const statusToggle = document.getElementById('statusToggle');
             const offlineStatus = document.getElementById('offlineStatus');
             const onlineStatus = document.getElementById('onlineStatus');
+            const statusLoader = document.getElementById('statusLoader');
             
             if (statusToggle) {
                 const savedStatus = localStorage.getItem('workerStatus');
-                // Explicitly check for the string 'online' to set the toggle
                 if (savedStatus === 'online') {
                     statusToggle.checked = true;
                     offlineStatus.style.display = 'none';
                     onlineStatus.style.display = 'inline-block';
                 } else {
-                    // Make sure to set offline state explicitly
                     statusToggle.checked = false;
                     onlineStatus.style.display = 'none';
                     offlineStatus.style.display = 'inline-block';
-                    // Ensure we have a workerStatus value stored
                     if (!savedStatus) {
                         localStorage.setItem('workerStatus', 'offline');
                     }
                 }
             }
-        })();
-        
-        document.addEventListener('DOMContentLoaded', function() {
+            
             // Settings tab switching
             const tabs = document.querySelectorAll('.settings-tab');
             tabs.forEach(tab => {
@@ -472,107 +906,178 @@
             });
             
             // Form submission handling
-            document.getElementById('account-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                // Get form data
-                const fullname = document.getElementById('name').value;
-                const email = document.getElementById('email').value;
-                const phone = document.getElementById('phone').value;
-                const location = document.getElementById('location').value;
-                const profession = document.getElementById('skill').value;
-                const experience = document.getElementById('experience').value;
-                const bio = document.getElementById('bio').value;
-                
-                // Check if hourly-rate element exists
-                const hourlyRateElement = document.getElementById('hourly-rate');
-                
-                // Create worker data object
-                const workerData = {
-                    fullname: {
-                        firstname: fullname.split(' ')[0] || '',
-                        lastname: fullname.split(' ').slice(1).join(' ') || ''
-                    },
-                    email: email,
-                    phoneNumber: phone,
-                    location: location,
-                    profession: profession,
-                    experience: Number(experience),
-                    bio: bio
-                };
-                
-                // Add hourly rate if the element exists
-                if (hourlyRateElement) {
-                    workerData.hourlyRate = Number(hourlyRateElement.value);
-                }
-                
-                // Get token from localStorage
-                const token = localStorage.getItem('workerToken');
-                if (!token) {
-                    alert('Authentication error! Please login again.');
-                    return;
-                }
-                
-                // Show loading indicator
-                const saveBtn = this.querySelector('.btn-save');
-                const originalBtnText = saveBtn.textContent;
-                saveBtn.textContent = 'Saving...';
-                saveBtn.disabled = true;
-                
-                // Update profile using API
-                fetch('http://localhost:3002/api/workers/profile', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(workerData)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to update profile');
+            const accountForm = document.getElementById('account-form');
+            if (accountForm) {
+                accountForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Get form data
+                    const fullname = document.getElementById('name').value;
+                    const email = document.getElementById('email').value;
+                    const phone = document.getElementById('phone').value;
+                    const location = document.getElementById('location').value;
+                    const profession = document.getElementById('skill').value;
+                    const experience = document.getElementById('experience').value;
+                    const bio = document.getElementById('bio').value;
+                    
+                    // Check if hourly-rate element exists
+                    const hourlyRateElement = document.getElementById('hourly-rate');
+                    
+                    // Split the full name into first and last name
+                    let firstname = fullname;
+                    let lastname = '';
+                    
+                    // If there's a space, split into first and last name
+                    if (fullname.includes(' ')) {
+                        const nameParts = fullname.split(' ');
+                        firstname = nameParts[0];
+                        lastname = nameParts.slice(1).join(' ');
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    // Update localStorage with new user data
-                    if (workerData.fullname.firstname) {
-                        localStorage.setItem('userFirstName', workerData.fullname.firstname);
+                    
+                    // Validation check - lastname must be at least 3 characters based on server validation rules
+                    if (!lastname || lastname.length < 3) {
+                        alert('Last name must be at least 3 characters long. Please enter your full name (First Last).');
+                        return;
                     }
-                    if (email) {
+                    
+                    // Create worker data object
+                    const workerData = {
+                        fullname: {
+                            firstname: firstname,
+                            lastname: lastname
+                        },
+                        email: email,
+                        phoneNumber: phone,
+                        location: location,
+                        profession: profession,
+                        experience: Number(experience),
+                        bio: bio
+                    };
+                    
+                    // Add hourly rate if the element exists
+                    if (hourlyRateElement) {
+                        workerData.hourlyRate = Number(hourlyRateElement.value);
+                    }
+                    
+                    // Get token from localStorage
+                    const token = localStorage.getItem('workerToken');
+                    if (!token) {
+                        alert('Authentication error! Please login again.');
+                        return;
+                    }
+                    
+                    // Show loading indicator
+                    const saveBtn = this.querySelector('.btn-save');
+                    const originalBtnText = saveBtn.textContent;
+                    saveBtn.textContent = 'Saving...';
+                    saveBtn.disabled = true;
+                    
+                    // Create error message container if it doesn't exist
+                    let errorContainer = document.getElementById('profile-error-container');
+                    if (!errorContainer) {
+                        errorContainer = document.createElement('div');
+                        errorContainer.id = 'profile-error-container';
+                        errorContainer.style.backgroundColor = '#ffebee';
+                        errorContainer.style.color = '#d32f2f';
+                        errorContainer.style.padding = '10px';
+                        errorContainer.style.borderRadius = '4px';
+                        errorContainer.style.marginBottom = '15px';
+                        errorContainer.style.display = 'none';
+                        accountForm.insertBefore(errorContainer, accountForm.firstChild);
+                    }
+                    errorContainer.style.display = 'none';
+                    
+                    // Update profile using API
+                    fetch('http://localhost:3002/api/workers/profile', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(workerData)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(data => {
+                                throw new Error(data.message || 'Failed to update profile');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Update local storage with all worker data
+                        localStorage.setItem('userFirstName', firstname);
+                        localStorage.setItem('userLastName', lastname);
                         localStorage.setItem('userEmail', email);
-                    }
-                    if (phone) {
                         localStorage.setItem('userMobileNumber', phone);
-                    }
-                    
-                    // Update displayed user name in the header if it exists
-                    const userProfileDisplay = document.querySelector('#userProfileBtn span');
-                    if (userProfileDisplay) {
-                        userProfileDisplay.textContent = fullname;
-                    }
-                    
-                    // Show success message
-                    alert('Profile updated successfully!');
-                })
-                .catch(error => {
-                    console.error('Error updating profile:', error);
-                    alert('Failed to update profile. Please try again.');
-                })
-                .finally(() => {
-                    // Reset button state
-                    saveBtn.textContent = originalBtnText;
-                    saveBtn.disabled = false;
+                        localStorage.setItem('userLocation', location);
+                        localStorage.setItem('location', location);
+                        localStorage.setItem('profession', profession);
+                        localStorage.setItem('experience', experience.toString());
+                        localStorage.setItem('userBio', bio);
+                        
+                        if (hourlyRateElement) {
+                            localStorage.setItem('hourlyRate', hourlyRateElement.value.toString());
+                        }
+                        
+                        // Handle profile picture if one was selected
+                        const tempProfileImage = localStorage.getItem('tempProfileImage') || sessionStorage.getItem('tempProfileImage');
+                        if (tempProfileImage) {
+                            try {
+                                // Remove any existing profile image first
+                                localStorage.removeItem('userProfileImage');
+                                sessionStorage.removeItem('userProfileImage');
+                                
+                                const storageResult = storeImageData('userProfileImage', tempProfileImage);
+                                
+                                // Clear temp storage
+                                localStorage.removeItem('tempProfileImage');
+                                sessionStorage.removeItem('tempProfileImage');
+                                
+                                // Update all profile images on the page
+                                if (profileImageEl) {
+                                    profileImageEl.src = tempProfileImage;
+                                }
+                                
+                                if (storageResult.temporary) {
+                                    console.warn('Profile image stored in temporary storage (sessionStorage)');
+                                    alert('Your profile picture was saved temporarily and may be lost when you close your browser. To preserve it, try clearing some browser data.');
+                                }
+                            } catch (storageError) {
+                                console.error('Error storing profile image:', storageError);
+                                // Still continue with the update, just show a warning about the image
+                                alert('Profile updated but the profile picture could not be saved due to browser storage limitations. Try using a smaller image.');
+                            }
+                        }
+                        
+                        // Update displayed user name in the header if it exists
+                        if (userProfileName) {
+                            userProfileName.textContent = fullname;
+                        }
+                        
+                        // Show success message with additional info
+                        alert('Profile updated successfully! Changes will be reflected across all pages.');
+                    })
+                    .catch(error => {
+                        console.error('Error updating profile:', error);
+                        
+                        // Display the error in the error container
+                        errorContainer.textContent = error.message || 'Failed to update profile. Please try again.';
+                        errorContainer.style.display = 'block';
+                        
+                        // Scroll to the top to show the error
+                        window.scrollTo(0, 0);
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        saveBtn.textContent = originalBtnText;
+                        saveBtn.disabled = false;
+                    });
                 });
-            });
+            }
             
             // Status toggle functionality (reusing from dashboard)
-            const statusToggle = document.getElementById('statusToggle');
-            const offlineStatus = document.getElementById('offlineStatus');
-            const onlineStatus = document.getElementById('onlineStatus');
-            const statusLoader = document.getElementById('statusLoader');
-            
-            if (statusToggle) {
+            if (statusToggle && statusLoader) {
                 statusToggle.addEventListener('change', function() {
                     statusLoader.style.display = 'inline-block';
                     
@@ -703,4 +1208,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
